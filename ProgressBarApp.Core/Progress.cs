@@ -5,21 +5,21 @@ namespace ProgressBarApp.Core {
 
 public interface 
 IProgressProvider {
-    event EventHandler<ProgressInfo>? ProgressChanged;
+    event EventHandler<Progress>? ProgressChanged;
 }
 
 public readonly struct 
-ProgressInfo {
-    public long Value { get; } // Index, ProgressIndex, CurrentIndex
-    public long Maximum { get; } // EndIndex
+Progress {
+    public long Value { get; } 
+    public long Maximum { get; } 
     public double Speed { get; }
     public string Message { get; }
-    public long ValueDelta { get; } //LastIndexIncrement, valueDelta, IncrementValue
-    public TimeSpan TimeDelta { get; } //TimeDuration, TimeSpan, LastTimeElapsed
+    public long ValueDelta { get; } 
+    public TimeSpan TimeDelta { get; } 
 
     #region Constructors
 
-    private ProgressInfo(long valueDelta, 
+    private Progress(long valueDelta, 
                          TimeSpan timeDelta, 
                          long value, 
                          long maximum, 
@@ -37,8 +37,8 @@ ProgressInfo {
 
     #region Static methods
 
-    public static ProgressInfo
-    Create() => new ProgressInfo(
+    public static Progress
+    Create() => new Progress(
         valueDelta: 0,
         timeDelta: TimeSpan.Zero,
         value: 0,
@@ -46,8 +46,8 @@ ProgressInfo {
         speed: 0,
         message: string.Empty);
 
-    public static ProgressInfo
-    Create(string message) => new ProgressInfo(
+    public static Progress
+    Create(string message) => new Progress(
         valueDelta: 0,
         timeDelta: TimeSpan.Zero,
         value: 0,
@@ -55,8 +55,8 @@ ProgressInfo {
         speed: 0,
         message: message);
 
-    public static ProgressInfo
-    Create(long value, long maximum, long valueDelta, TimeSpan timeDelta, string message = "") => new ProgressInfo(
+    public static Progress
+    Create(long value, long maximum, long valueDelta, TimeSpan timeDelta, string message = "") => new Progress(
         valueDelta: valueDelta,
         timeDelta: timeDelta,
         value: value,
@@ -68,25 +68,25 @@ ProgressInfo {
 
     #region Methods
 
-    public ProgressInfo
+    public Progress
     WithLastIncrement(long lastIncrement) 
-        => ProgressInfo.Create(Value, Maximum, lastIncrement, TimeDelta, Message);
+        => Progress.Create(Value, Maximum, lastIncrement, TimeDelta, Message);
 
-    public ProgressInfo
+    public Progress
     WithValue(long value)
-        => ProgressInfo.Create(value, Maximum, ValueDelta, TimeDelta, Message);
+        => Progress.Create(value, Maximum, ValueDelta, TimeDelta, Message);
 
-    public ProgressInfo
+    public Progress
     WithMaximum(long maximum)
-        => ProgressInfo.Create(Value, maximum, ValueDelta, TimeDelta, Message);
+        => Progress.Create(Value, maximum, ValueDelta, TimeDelta, Message);
 
-    public ProgressInfo
+    public Progress
     WithTimeDelta(TimeSpan timeDelta)
-        => ProgressInfo.Create(Value, Maximum, ValueDelta, timeDelta, Message);
+        => Progress.Create(Value, Maximum, ValueDelta, timeDelta, Message);
 
-    public ProgressInfo
+    public Progress
     WithSpeed(double speed)
-        => new ProgressInfo(
+        => new Progress(
         valueDelta: ValueDelta,
         timeDelta: TimeDelta,
         value: Value,
@@ -94,9 +94,9 @@ ProgressInfo {
         speed: speed,
         message: Message);
 
-    public ProgressInfo
+    public Progress
     WithMessage(string message)
-        => new ProgressInfo(
+        => new Progress(
         valueDelta: ValueDelta,
         timeDelta: TimeDelta,
         value: Value,

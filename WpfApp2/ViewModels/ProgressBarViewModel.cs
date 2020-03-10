@@ -12,7 +12,6 @@ ProgressBarViewModel : ViewModelBase, IDisposable
     private readonly double _refreshInterval;
 
     public ProgressBarViewModel(IProgressProvider progressProvider, double refreshIntervalMs = 0) {
-
         _refreshInterval = refreshIntervalMs;
         _progressProvider = progressProvider;
         _progressProvider.ProgressChanged += OnProgressChanged;
@@ -41,8 +40,8 @@ ProgressBarViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private ProgressInfo? _progressInfo;
-    public ProgressInfo? Progress {
+    private Progress? _progressInfo;
+    public Progress? Progress {
         get => _progressInfo;
         set => SetPropertyIfChanged(ref _progressInfo, value);
     }
@@ -56,7 +55,7 @@ ProgressBarViewModel : ViewModelBase, IDisposable
     #endregion
 
     private void 
-    OnProgressChanged(object? sender, ProgressInfo p) {
+    OnProgressChanged(object? sender, Progress p) {
         Maximum = p.Maximum;
         Value += p.ValueDelta;
         Text = p.Message;

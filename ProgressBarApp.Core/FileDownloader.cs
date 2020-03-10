@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using ProgressReporter = System.Progress<ProgressBarApp.Core.Progress>;
 
 namespace ProgressBarApp.Core {
 
@@ -23,7 +24,7 @@ DownloadResult {
 }
 
 public class
-TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider {
+TestFileDownloader : ProgressReporter, IFileDownloader, IProgressProvider {
     
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName) => 
@@ -38,7 +39,7 @@ TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider 
         var timer = new Stopwatch();
         timer.Start();
 
-        var progressInfo = ProgressInfo.Create("Connecting...");
+        var progressInfo = Progress.Create("Connecting...");
         OnReport(progressInfo);
 
         Random random = new Random();
@@ -48,8 +49,7 @@ TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider 
 
         Task.Delay(2000).Wait();
 
-        //progressInfo = ProgressInfo.Connected(position, totalBytesToDownload);
-        progressInfo = ProgressInfo.Create("Connected");
+        progressInfo = Progress.Create("Connected");
         OnReport(progressInfo);
 
         while (position < totalBytesToDownload && !cancellationToken.IsCancellationRequested) {
@@ -58,7 +58,7 @@ TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider 
             var value = Math.Min(totalBytesToDownload - position, random.Next(averageSpeedBytesPerSec / 20));
             position += value;
 
-            progressInfo = ProgressInfo.Create(position, totalBytesToDownload, value, TimeSpan.FromMilliseconds(timer.ElapsedMilliseconds), "Downloading...");
+            progressInfo = Progress.Create(position, totalBytesToDownload, value, TimeSpan.FromMilliseconds(timer.ElapsedMilliseconds), "Downloading...");
             OnReport(progressInfo);
         }
 

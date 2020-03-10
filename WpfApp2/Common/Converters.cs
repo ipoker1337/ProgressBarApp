@@ -12,10 +12,10 @@ DownloadProgressToStringConverter : IValueConverter {
         if (value is null)
             return "ProgressBar";
 
-        if (!(value is ProgressInfo))
+        if (!(value is Progress))
             throw new InvalidOperationException("The target must be ProgressInfo");
 
-        var downloadProgress = (ProgressInfo) value;
+        var downloadProgress = (Progress) value;
         var total = DownloadHelper.ConvertBytes(downloadProgress.Maximum);
         return $"{DownloadHelper.ConvertBytes(downloadProgress.Value, total.Item2, true, 1)} / {total.Item1}";
     }
@@ -29,9 +29,9 @@ ProgressToIndeterminateConverter : IValueConverter {
     public object Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return false;
-        if (!(value is ProgressInfo))
+        if (!(value is Progress))
             throw new InvalidOperationException("The target must be ProgressInfo");
-        var downloadProgress = (ProgressInfo) value;
+        var downloadProgress = (Progress) value;
         return downloadProgress.Maximum < 1;
     }
 

@@ -87,7 +87,6 @@
                 Margin="10,0,10,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                IsChecked="{Binding IsDarkTheme}"
                 Style="{DynamicResource SwitchToggleButton}" />
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">Dark</TextBlock>
         </StackPanel>
