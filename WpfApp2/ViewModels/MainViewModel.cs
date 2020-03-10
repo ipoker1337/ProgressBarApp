@@ -1,62 +1,72 @@
-﻿using ProgressBarDemo.Domain;
-using ReactiveUI;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using WpfApp2.Infrastructure.Style;
+using ProgressBarApp.Core;
+using WpfApp2.Infrastructure;
 
 namespace WpfApp2.ViewModels {
 
-    public class MainViewModel : ViewModelBase, IDisposable {
+public class 
+MainViewModel : ViewModelBase, IDisposable {
+    private readonly ICommand _startCommand;
+    private readonly ICommand _cancelCommand;
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private readonly IDisposable _cleanup;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private ICommand _command;
+    private string _commandText;
 
-        private bool _isDarkTheme;
+    public MainViewModel() {
 
-        public MainViewModel() {
-            var fileDownloader = new TestFileDownloader();
-            ProgressBar = new ProgressBarViewModel(fileDownloader);
+        var fileDownloader = new TestFileDownloader();
+        ProgressBar = new ProgressBarViewModel(fileDownloader);
 
-            _cleanup = this.WhenAnyValue(x => x.IsDarkTheme)
-                            .Subscribe(x => ThemeHelper.SetTheme(x ? Theme.Dark : Theme.Light));
+        _startCommand = new RelayCommand(async () => { await StartAsync(); });
+        _cancelCommand = new RelayCommand(Cancel);
 
-            var canDownload = 
-                this.WhenAnyValue(x => x.ProgressBar.ProgressBarState, 
-                x =>  x == ProgressBarState.Disabled);
+        ResetToDefault();
 
-            DownloadCommand = ReactiveCommand.CreateFromTask(Download, canDownload);
+        async Task StartAsync() {
+            CommandText = "Cancel";
+            Command = _cancelCommand;
 
-            async Task 
-            Download() {
-                var source = new Uri(@"http://h2n-uptoyou.azureedge.net/main/Hand2NoteInstaller.exe");
-                const string destination = "Hand2NoteInstaller.exe";
+            _cancellationTokenSource = new CancellationTokenSource();
+            var downloadResult = await fileDownloader.DownloadFileAsync(new Uri(@"http://www.source.com/"), "destination", _cancellationTokenSource.Token);
+        }
 
-                await using var stream = File.Create(destination);
-                await fileDownloader.DownloadFileAsync(source, destination, _cancellationTokenSource.Token);
+        void Cancel() {
+            _cancellationTokenSource.Cancel();
+            CommandText = "Install";
+            Command = _startCommand;
             }
-        }
 
-        #region Properties
-
-        public ProgressBarViewModel ProgressBar { get; }
-
-        public ICommand DownloadCommand { get; }
-
-        public bool IsDarkTheme {
-            get => _isDarkTheme;
-            set => SetPropertyIfChanged(ref _isDarkTheme, value);
-        }
-
-        #endregion
-
-        public void 
-        Dispose() {
-            _cancellationTokenSource.Dispose();
-            ProgressBar.Dispose();
-            _cleanup.Dispose();
+        void ResetToDefault() {
+            CommandText = "Install";
+            Command = _startCommand;
         }
     }
+
+    #region Properties
+
+    public ProgressBarViewModel ProgressBar { get; }
+
+    public ICommand Command {
+        get => _command;
+        set => this.SetPropertyIfChanged(ref _command, value);
+    }
+
+    public string CommandText {
+        get => _commandText;
+        set => this.SetPropertyIfChanged(ref _commandText, value);
+    }
+
+    #endregion
+
+    public void 
+    Dispose() {
+        _cancellationTokenSource.Dispose();
+        ProgressBar.Dispose();
+    }
+}
 }

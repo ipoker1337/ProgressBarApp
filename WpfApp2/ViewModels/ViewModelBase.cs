@@ -1,25 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using WpfApp2.Infrastructure;
 
-namespace WpfApp2.ViewModels
-{
-    public class ViewModelBase : INotifyPropertyChanged {
-        public event PropertyChangedEventHandler? PropertyChanged;
+namespace WpfApp2.ViewModels {
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "") {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+public class ViewModelBase : INotifyPropertyChanged {
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected bool SetPropertyIfChanged<T>(ref T field, T value, [CallerMemberName] string propertyName = "") {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-                return false;
-
-            field = value;
-            OnPropertyChanged(propertyName);
-
-            return true;
-        }
+    protected virtual void 
+    OnPropertyChanged([CallerMemberName] string propertyName = "") {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    protected bool 
+    SetPropertyIfChanged<T>(ref T field, T value, [CallerMemberName] string propertyName = "") {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return false;
+
+        field = value;
+        OnPropertyChanged(propertyName);
+
+        return true;
+    }
+}
 }

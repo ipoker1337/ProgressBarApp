@@ -1,4 +1,5 @@
 ﻿using System;
+using ProgressBarApp.Core.Common;
 
 namespace ProgressBarApp.Core {
 
@@ -7,274 +8,106 @@ IProgressProvider {
     event EventHandler<ProgressInfo>? ProgressChanged;
 }
 
-public enum 
-DownloadStatus {
-
-        NotStarted, StartPending, Running, Paused, Completed, Failed,
-}
-
 public readonly struct 
 ProgressInfo {
-
-    /// <summary>
-    /// Возвращает число полученных байтов с последнего обновления.
-    /// </summary>
-    public long LastIncrement { get; }
-
-    /// <summary>
-    /// Возвращает общее количество байтов, которое будет получено.
-    /// </summary>
-    public long To { get; }
-
-    /// <summary>
-    /// Возвращает число полученных байтов за все время операции.
-    /// </summary>
-    public long From { get; }
-
-    /// <summary>
-    /// Возвращает текущую скорость загрузки в байтах в секунду.
-    /// </summary>
+    public long Value { get; } // Index, ProgressIndex, CurrentIndex
+    public long Maximum { get; } // EndIndex
     public double Speed { get; }
-
-    /// <summary>
-    /// Возвращает статус операции загрузки.
-    /// </summary>
-    public DownloadStatus Status { get; }
-
-    public DateTime? StartedAt { get; }
-
-    /// <summary>
-    /// Возвращает сообщение о текущем ходе операции.
-    /// </summary>
     public string Message { get; }
-
-    /// <summary>
-    /// Возвращает значение, показывающее, какая ошибка произошла в течение асинхронной операции.
-    /// </summary>
-    public Exception? Error { get; }
+    public long ValueDelta { get; } //LastIndexIncrement, valueDelta, IncrementValue
+    public TimeSpan TimeDelta { get; } //TimeDuration, TimeSpan, LastTimeElapsed
 
     #region Constructors
 
-    private ProgressInfo(long lastIncrement,
-                             long to,
-                             long @from,
-                             double speed,
-                             DownloadStatus downloadStatus = DownloadStatus.NotStarted,
-                             string message = "",
-                             Exception? error = null,
-                             DateTime? startedAt = null) {
-        LastIncrement = lastIncrement;
-        To = to;
-        From = @from;
-        Speed = speed;
-        Status = downloadStatus;
+    private ProgressInfo(long valueDelta, 
+                         TimeSpan timeDelta, 
+                         long value, 
+                         long maximum, 
+                         double speed, 
+                         string message = "") {
+        ValueDelta = valueDelta.VerifyNonNegative();
+        TimeDelta = timeDelta.VerifyNonNegative();
+        Value = value.VerifyNonNegative();
+        Maximum = maximum.VerifyNonNegative();
+        Speed = speed.VerifyNonNegative();
         Message = message;
-        Error = error;
-        StartedAt = startedAt;
-        }
+    }
 
     #endregion
 
     #region Static methods
 
-    public static DownloadProgress
-    Create() {
-        return new DownloadProgress(
-        lastBytesDownloaded: 0,
-        totalBytesToReceive: 0,
-        bytesReceived: 0,
-        transferSpeed: 0,
-        downloadStatus: DownloadStatus.NotStarted,
+    public static ProgressInfo
+    Create() => new ProgressInfo(
+        valueDelta: 0,
+        timeDelta: TimeSpan.Zero,
+        value: 0,
+        maximum: 0,
+        speed: 0,
         message: string.Empty);
-        }
 
-    public static DownloadProgress
-    Connecting(DateTime? startedAt = null) {
-        return new DownloadProgress(
-        lastBytesDownloaded: 0,
-        totalBytesToReceive: 0,
-        bytesReceived: 0,
-        transferSpeed: 0,
-        downloadStatus: DownloadStatus.StartPending,
-        message: "Connecting...",
-        startedAt: startedAt ?? DateTime.Now);
-    }
+    public static ProgressInfo
+    Create(string message) => new ProgressInfo(
+        valueDelta: 0,
+        timeDelta: TimeSpan.Zero,
+        value: 0,
+        maximum: 0,
+        speed: 0,
+        message: message);
 
-    public static DownloadProgress
-    Connected(long totalBytesToReceive, long bytesReceived = 0) {
-        return new DownloadProgress(
-        lastBytesDownloaded: 0,
-        totalBytesToReceive: totalBytesToReceive,
-        bytesReceived: bytesReceived,
-        transferSpeed: 0,
-        downloadStatus: DownloadStatus.StartPending,
-        message: "Connected");
-    }
-
-    public static DownloadProgress
-    Downloading(long lastBytesDownloaded, long totalBytesToReceive, long bytesReceived, double transferSpeed = 0) {
-        return new DownloadProgress(
-        lastBytesDownloaded: lastBytesDownloaded,
-        totalBytesToReceive: totalBytesToReceive,
-        bytesReceived: bytesReceived,
-        transferSpeed: transferSpeed,
-        downloadStatus: DownloadStatus.Running,
-        message: "Downloading...");
-    }
-
-    public static DownloadProgress
-    Finishing() {
-        return new DownloadProgress(
-        lastBytesDownloaded: 0,
-        totalBytesToReceive: 0,
-        bytesReceived: 0,
-        transferSpeed: 0,
-        downloadStatus: DownloadStatus.Running,
-        message: "Finishing...");
-    }
-
-    public static DownloadProgress
-    Finished(long totalBytesToReceive, long bytesReceived) {
-        return new DownloadProgress(
-        lastBytesDownloaded: 0,
-        totalBytesToReceive: totalBytesToReceive,
-        bytesReceived: bytesReceived,
-        transferSpeed: 0,
-        downloadStatus: DownloadStatus.Completed,
-        message: "Finished");
-    }
+    public static ProgressInfo
+    Create(long value, long maximum, long valueDelta, TimeSpan timeDelta, string message = "") => new ProgressInfo(
+        valueDelta: valueDelta,
+        timeDelta: timeDelta,
+        value: value,
+        maximum: maximum,
+        speed: (timeDelta.TotalMilliseconds > 0) ? valueDelta * 1000.0 / timeDelta.TotalMilliseconds : 0,
+        message: message);
 
     #endregion
 
     #region Methods
 
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="lastBytesDownloaded">Количество полученных байтов с последнего обновления</param>
-    public DownloadProgress
-    WithLastBytesDownloaded(long lastBytesDownloaded) {
+    public ProgressInfo
+    WithLastIncrement(long lastIncrement) 
+        => ProgressInfo.Create(Value, Maximum, lastIncrement, TimeDelta, Message);
 
-        lastBytesDownloaded.VerifyGreaterEqualZero();
+    public ProgressInfo
+    WithValue(long value)
+        => ProgressInfo.Create(value, Maximum, ValueDelta, TimeDelta, Message);
 
-        return new DownloadProgress(
-        lastBytesDownloaded: lastBytesDownloaded,
-        totalBytesToReceive: To,
-        bytesReceived: From,
-        transferSpeed: Speed,
-        downloadStatus: Status,
-        message: Message,
-        error: Error);
-    }
+    public ProgressInfo
+    WithMaximum(long maximum)
+        => ProgressInfo.Create(Value, maximum, ValueDelta, TimeDelta, Message);
 
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="totalBytesToReceive">Общее количество байтов, которое будет получено.</param>
-    public DownloadProgress
-    WithTotalBytesToReceive(long totalBytesToReceive) {
+    public ProgressInfo
+    WithTimeDelta(TimeSpan timeDelta)
+        => ProgressInfo.Create(Value, Maximum, ValueDelta, timeDelta, Message);
 
-        totalBytesToReceive.VerifyGreaterEqualZero();
+    public ProgressInfo
+    WithSpeed(double speed)
+        => new ProgressInfo(
+        valueDelta: ValueDelta,
+        timeDelta: TimeDelta,
+        value: Value,
+        maximum: Maximum,
+        speed: speed,
+        message: Message);
 
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: totalBytesToReceive,
-        bytesReceived: From,
-        transferSpeed: Speed,
-        downloadStatus: Status,
-        message: Message,
-        error: Error);
-    }
+    public ProgressInfo
+    WithMessage(string message)
+        => new ProgressInfo(
+        valueDelta: ValueDelta,
+        timeDelta: TimeDelta,
+        value: Value,
+        maximum: Maximum,
+        speed: Speed,
+        message: message);
 
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="bytesReceived">Общее количество байтов, которое будет получено.</param>
-    public DownloadProgress
-    WithBytesReceived(long bytesReceived) {
+    public override string 
+    ToString() => $"{(Maximum > 0 ? (double)Value / Maximum : 0.0):P} ({Value} / {Maximum}), {Value} MB | {Speed} MB/s";
 
-        bytesReceived.VerifyGreaterEqualZero();
+    #endregion
 
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: To,
-        bytesReceived: bytesReceived,
-        transferSpeed: Speed,
-        downloadStatus: Status,
-        message: Message,
-        error: Error);
-    }
-
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="transferSpeed">Текущая скорость загрузки в байтах в секунду</param>
-    public DownloadProgress
-    WithTransferSpeed(double transferSpeed) {
-        transferSpeed.VerifyGreaterEqualZero();
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: To,
-        bytesReceived: From,
-        transferSpeed: transferSpeed,
-        downloadStatus: Status,
-        message: Message,
-        error: Error);
-    }
-
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="downloadStatus">Статус операции загрузки</param>
-    public DownloadProgress WithStatus(DownloadStatus downloadStatus) {
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: To,
-        bytesReceived: From,
-        transferSpeed: Speed,
-        downloadStatus: downloadStatus,
-        message: Message,
-        error: Error);
-    }
-
-
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="message">Сообщение о текущем ходе операции</param>
-    public DownloadProgress
-    WithMessage(string message) {
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: To,
-        bytesReceived: From,
-        transferSpeed: Speed,
-        downloadStatus: Status,
-        message: message,
-        error: Error);
-    }
-
-    /// <summary>
-    /// Возвращает DownloadProgress полученный в результате изменения свойства
-    /// </summary>
-    /// <param name="error">Значение, показывающее, какая ошибка произошла в течение асинхронной операции</param>
-    public DownloadProgress
-    WithError(Exception? error) {
-        return new DownloadProgress(
-        lastBytesDownloaded: LastIncrement,
-        totalBytesToReceive: To,
-        bytesReceived: From,
-        transferSpeed: Speed,
-        downloadStatus: Status,
-        message: Message,
-        error: error);
-        }
-
-    public override string ToString() =>
-    $"55% ({From} / {To}), {From} MB | {Speed} MB/s";
-
-        #endregion
-
-    }
-
+}
 }

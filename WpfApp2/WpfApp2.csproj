@@ -13,4 +13,8 @@
     <PackageReference Include="ReactiveUI.WPF" Version="11.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ProgressBarApp.Core\ProgressBarApp.Core.csproj" />
+  </ItemGroup>
+
 </Project>

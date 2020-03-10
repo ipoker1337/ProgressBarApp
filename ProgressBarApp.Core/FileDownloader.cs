@@ -8,37 +8,37 @@ namespace ProgressBarApp.Core {
 public interface 
 IFileDownloader {
 
-    Task<ProgressResult> 
+    Task<DownloadResult> 
     DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken);
 
-    Task<ProgressResult> 
+    Task<DownloadResult> 
     DownloadFileAsync(Uri address, string fileName);
 
-    ProgressResult
+    DownloadResult
     DownloadFile(Uri address, string fileName, CancellationToken cancellationToken);
 }
 
-public class
-ProgressResult {
+public readonly struct 
+DownloadResult {
 }
 
 public class
 TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider {
     
-    public async Task<ProgressResult>
-    DownloadFileAsync(Uri address, string fileName) 
-        => await Task.Run(() => DownloadFile(address, fileName, CancellationToken.None)).ConfigureAwait(false);
+    public async Task<DownloadResult>
+    DownloadFileAsync(Uri address, string fileName) => 
+        await Task.Run(() => DownloadFile(address, fileName, CancellationToken.None)).ConfigureAwait(false);
 
-    public async Task<ProgressResult>
-    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) 
-        => await Task.Run(() => DownloadFile(address, fileName, cancellationToken)).ConfigureAwait(false);
+    public async Task<DownloadResult>
+    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) => 
+        await Task.Run(() => DownloadFile(address, fileName, cancellationToken)).ConfigureAwait(false);
 
-    public ProgressResult
+    public DownloadResult
     DownloadFile(Uri address, string fileName, CancellationToken cancellationToken) {
         var timer = new Stopwatch();
         timer.Start();
 
-        var progressInfo = ProgressInfo.Connecting();
+        var progressInfo = ProgressInfo.Create("Connecting...");
         OnReport(progressInfo);
 
         Random random = new Random();
@@ -48,33 +48,27 @@ TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider 
 
         Task.Delay(2000).Wait();
 
-        progressInfo = ProgressInfo.Connected(position, totalBytesToDownload);
+        //progressInfo = ProgressInfo.Connected(position, totalBytesToDownload);
+        progressInfo = ProgressInfo.Create("Connected");
         OnReport(progressInfo);
 
         while (position < totalBytesToDownload && !cancellationToken.IsCancellationRequested) {
             //Simulate network delay
-            var delay = random.Next(1000 / 20);
-            Task.Delay(delay).Wait();
+            Task.Delay(random.Next(1000 / 20)).Wait();
             var value = Math.Min(totalBytesToDownload - position, random.Next(averageSpeedBytesPerSec / 20));
             position += value;
 
-            double transferSpeed = 0;
-            if (timer.ElapsedMilliseconds > 0)
-                transferSpeed = value * 1000.0 / timer.Elapsed.Milliseconds;
-            progressInfo = progressInfo.Downloading(value,
-                                                            totalBytesToDownload,
-                                                            position,
-                                                            transferSpeed);
+            progressInfo = ProgressInfo.Create(position, totalBytesToDownload, value, TimeSpan.FromMilliseconds(timer.ElapsedMilliseconds), "Downloading...");
             OnReport(progressInfo);
         }
 
         if (!cancellationToken.IsCancellationRequested) {
-            progressInfo = ProgressInfo.Finishing();
+            progressInfo = progressInfo.WithMessage("Finishing...");
             OnReport(progressInfo);
 
             Task.Delay(2000).Wait();
 
-            progressInfo = ProgressInfo.Finished(totalBytesToDownload, position);
+            progressInfo = progressInfo.WithMessage("Finished");
             OnReport(progressInfo);
         }
         else {
@@ -83,7 +77,7 @@ TestFileDownloader : Progress<ProgressInfo>, IFileDownloader, IProgressProvider 
             //reporter?.Report(data);
         }
 
-        return new ProgressResult();
+        return new DownloadResult();
     }
 }
 }
