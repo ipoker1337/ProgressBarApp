@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace ProgressBarApp.Core.Common {
-    
+namespace ProgressApp.Core.Common {
+
 public static class 
-Numbers {
-    // INT
+INT {
+
     public static int
     VerifyInRange(this int target, int start, int end) {
         if (target >= start && target <= end)
@@ -12,7 +12,32 @@ Numbers {
         throw new ArgumentOutOfRangeException();
     }
 
-    // LONG
+    public static int
+    VerifyGreaterThanOrEqual(this int left, int right) {
+        if (left < right)
+            throw new ArgumentOutOfRangeException($"Cannot be less than {right}");
+        return left;
+    }
+
+    public static int
+    VerifyNonNegative(this int value) => 
+        value.VerifyGreaterThanOrEqual(0);
+
+    public static TimeSpan
+    Hours(this int hours) => TimeSpan.FromHours(hours);
+
+    public static TimeSpan 
+    Minutes(this int minutes) => TimeSpan.FromMinutes(minutes);
+
+    public static TimeSpan
+    Seconds(this int seconds) => TimeSpan.FromSeconds(seconds);
+
+    public static TimeSpan 
+    Milliseconds(this int milliseconds) => TimeSpan.FromMilliseconds(milliseconds);
+}
+
+public static class 
+Long {
     public static long
     VerifyGreaterThanOrEqual(this long left, long right) {
         if (left < right)
@@ -39,7 +64,13 @@ Numbers {
         throw new ArgumentOutOfRangeException();
     }
 
-    // DOUBLE
+    public static TimeSpan 
+    Seconds(this long seconds) => TimeSpan.FromSeconds(seconds);
+}
+
+public static class 
+Double {
+
     public static double
     VerifyNonNegative(this double value) {
         if (value < 0)
@@ -47,13 +78,6 @@ Numbers {
         return value;
     }
 
-    // TimeSpan
-    public static TimeSpan
-    VerifyNonNegative(this TimeSpan value) {
-        if (value < TimeSpan.Zero)
-            throw new ArithmeticException("Cannot be negative");
-        return value;
-    }
+}
+}
 
-}
-}

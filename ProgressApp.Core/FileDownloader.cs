@@ -2,13 +2,11 @@
 using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using ProgressReporter = System.Progress<ProgressBarApp.Core.Progress>;
 
-namespace ProgressBarApp.Core {
+namespace ProgressApp.Core {
 
 public interface 
 IFileDownloader {
-
     Task<DownloadResult> 
     DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken);
 
@@ -24,7 +22,7 @@ DownloadResult {
 }
 
 public class
-TestFileDownloader : ProgressReporter, IFileDownloader, IProgressProvider {
+TestFileDownloader : ProgressProvider, IFileDownloader {
     
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName) => 
@@ -39,8 +37,7 @@ TestFileDownloader : ProgressReporter, IFileDownloader, IProgressProvider {
         var timer = new Stopwatch();
         timer.Start();
 
-        var progressInfo = Progress.Create("Connecting...");
-        OnReport(progressInfo);
+        Report("Connecting...");
 
         Random random = new Random();
         long position = 0;
@@ -49,32 +46,28 @@ TestFileDownloader : ProgressReporter, IFileDownloader, IProgressProvider {
 
         Task.Delay(2000).Wait();
 
-        progressInfo = Progress.Create("Connected");
-        OnReport(progressInfo);
+        Report("Connected");
+        Task.Delay(random.Next(1000 / 20)).Wait();
+        Report(0, totalBytesToDownload, "Downloading...");
 
         while (position < totalBytesToDownload && !cancellationToken.IsCancellationRequested) {
             //Simulate network delay
             Task.Delay(random.Next(1000 / 20)).Wait();
-            var value = Math.Min(totalBytesToDownload - position, random.Next(averageSpeedBytesPerSec / 20));
-            position += value;
-
-            progressInfo = Progress.Create(position, totalBytesToDownload, value, TimeSpan.FromMilliseconds(timer.ElapsedMilliseconds), "Downloading...");
-            OnReport(progressInfo);
+            var deltaValue = Math.Min(totalBytesToDownload - position, random.Next(averageSpeedBytesPerSec / 20));
+            position += deltaValue;
+            Report(deltaValue);
         }
 
         if (!cancellationToken.IsCancellationRequested) {
-            progressInfo = progressInfo.WithMessage("Finishing...");
-            OnReport(progressInfo);
-
+            Report("Finishing...");
             Task.Delay(2000).Wait();
-
-            progressInfo = progressInfo.WithMessage("Finished");
-            OnReport(progressInfo);
+            Report(0, 100, "Finished");
         }
         else {
-            // Paused(reporter);
-            //data = data.WithMessage("Paused.");
-            //reporter?.Report(data);
+            Report("Please wait...");
+            Task.Delay(2500).Wait();
+            Report(0, 100, "Canceled");
+            return new DownloadResult();
         }
 
         return new DownloadResult();

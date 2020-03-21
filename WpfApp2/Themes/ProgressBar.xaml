@@ -6,7 +6,6 @@
         <Setter Property="Background" Value="{DynamicResource ProgressBarBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ProgressBarBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="MinWidth" Value="200" />
         <Setter Property="IsTabStop" Value="False" />
 
         <Setter Property="Template">

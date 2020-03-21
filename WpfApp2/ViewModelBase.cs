@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace WpfApp2.ViewModels {
+namespace WpfApp2 {
 
 public class ViewModelBase : INotifyPropertyChanged {
     public event PropertyChangedEventHandler? PropertyChanged;

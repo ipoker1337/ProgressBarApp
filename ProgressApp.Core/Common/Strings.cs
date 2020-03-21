@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ProgressBarApp.Core.Common {
+namespace ProgressApp.Core.Common {
 
 public static class 
 Strings {

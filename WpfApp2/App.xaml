@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/WpfApp2;component/Themes/ProgressBar.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/WpfApp2;component/Themes/Button.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/WpfApp2;component/Themes/ToogleButton.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/WpfApp2;component/Themes/DefaultTheme.Light.xaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Input;
 
-namespace WpfApp2.Infrastructure
+namespace WpfApp2.Common
 {
     public class RelayCommand<T> : ICommand
     {
