@@ -87,7 +87,7 @@ ProgressToStringConverter : IValueConverter {
     public object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
-            return "TEST";
+            return string.Empty;
         if (!(value is Progress))
             throw new InvalidOperationException("The values[0] must be Progress");
 

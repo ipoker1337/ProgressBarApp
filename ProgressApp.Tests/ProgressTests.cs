@@ -6,7 +6,7 @@ using ProgressApp.Core;
 
 namespace ProgressApp.Tests {
 public class 
-Tests {
+ProgressTest {
     private static long TicksFromSeconds(double seconds) => 
         (long)(Stopwatch.Frequency * seconds);
 
@@ -49,24 +49,10 @@ Tests {
         Assert.AreEqual(100, rateEstimator.GetCurrentRate(now));
     }
 
-    internal class 
-    TestSynchronizationContext : SynchronizationContext {
-        public override void Post(SendOrPostCallback d, object state) => d(state);
-        public override void Send(SendOrPostCallback d, object state) => d(state);
-    }
-
-    internal class 
-    TestProgressProvider : ProgressProvider {
-
-        public new void Report(long value, long? targetValue, string message = "") => base.Report(value, targetValue, message);
-        public new void Report(string message) => base.Report(message);
-        public new void Report(long deltaValue) => base.Report(deltaValue);
-    }
-
     [Test]
     public void 
     ProgressProviderTest() {
-        var provider = new TestProgressProvider();
+        var provider = new ProgressReporter();
         Assert.AreEqual(null, provider.Progress);
 
         provider.Report(0, null);

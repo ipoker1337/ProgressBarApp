@@ -9,12 +9,12 @@ namespace WpfApp2 {
 
 public class 
 ProgressViewModel : ViewModelBase, IDisposable {
-    private readonly IProgressProvider _progressProvider;
+    private readonly IHasProgress _provider;
     private readonly DispatcherTimer _textTimer;
     private readonly DispatcherTimer _progressTimer;
 
-    public ProgressViewModel(IProgressProvider progressProvider) {
-        _progressProvider = progressProvider;
+    public ProgressViewModel(IHasProgress provider) {
+        _provider = provider;
 
 // Under development
             _textTimer = new DispatcherTimer();
@@ -29,15 +29,15 @@ ProgressViewModel : ViewModelBase, IDisposable {
     }
 
     private void OnProgressUpdate(object? sender, EventArgs e) {
-        TargetValue = _progressProvider.Progress?.TargetValue ?? 0;
-        Text = _progressProvider.Progress?.Message;
-        Value = _progressProvider.Progress?.Value ?? 0;
+        TargetValue = _provider.Progress?.TargetValue ?? 0;
+        Text = _provider.Progress?.Message;
+        Value = _provider.Progress?.Value ?? 0;
         //Progress = _progressProvider.Progress;
     }
 
 
     private void OnTextUpdate(object? sender, EventArgs e) {
-        Progress = _progressProvider.Progress;
+        Progress = _provider.Progress;
     }
 
     #region Properties

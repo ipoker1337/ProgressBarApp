@@ -35,13 +35,13 @@ MainViewModel : ViewModelBase, IDisposable {
     private ICommand _command = new RelayCommand();
     public ICommand Command {
         get => _command;
-        set => this.SetPropertyIfChanged(ref _command, value);
+        set => SetPropertyIfChanged(ref _command, value);
     }
 
     private string _commandText = string.Empty;
     public string CommandText {
         get => _commandText;
-        set => this.SetPropertyIfChanged(ref _commandText, value);
+        set => SetPropertyIfChanged(ref _commandText, value);
     }
 
     public void 

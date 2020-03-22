@@ -1,49 +1,47 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using ProgressApp.Core.Common;
 
 namespace ProgressApp.Core {
 
 public interface 
-IProgressProvider {
+IHasProgress {
     Progress? Progress { get; }
 }
 
+public interface 
+IProgressReporter {
+    void Report(long value, long? targetValue, string message);
+    void Report(long deltaValue);
+    void Report(string message);
+}
+
 public class
-ProgressProvider : IProgressProvider {
+ProgressReporter : IHasProgress, IProgressReporter {
     private readonly RateEstimator _rateEstimator;
 
-    protected ProgressProvider() {
+    public ProgressReporter() {
         _rateEstimator = new RateEstimator(10);
     }
 
     public Progress? Progress { get; private set; }
 
-//Under development
-
-    protected void
+    public void
     Report(long value, long? targetValue, string message = "") =>
-    Progress = Core.Progress.Create(value, targetValue, message);
+        Progress = Progress.Create(value, targetValue, message);
 
-
-    protected void
-    Report(long deltaValue) => CalculateAndPostUpdate(deltaValue);
-
-    protected void
+    public void
     Report(string message) =>
-    Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
+        Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
 
-
-    private void
-    CalculateAndPostUpdate(long deltaValue = 0) {
-
+    public void 
+    Report(long deltaValue) {
         var p = Progress ?? Core.Progress.Create();
         _rateEstimator.Increment(deltaValue);
         var rate = _rateEstimator.GetCurrentRate();
         var newValue = p.Value + deltaValue.VerifyNonNegative();
         long timeLeft = 0;
-        if (p.TargetValue != null)
+        if (p.TargetValue != null && p.TargetValue.Value > newValue)
             timeLeft = rate > 0 ? (p.TargetValue.Value - newValue) / rate : 0;
         Progress = p.Update(newValue, rate, timeLeft.Seconds());
     }
@@ -61,7 +59,7 @@ Progress {
         Value = value.VerifyNonNegative();
         TargetValue = targetValue?.VerifyNonNegative();
         Rate = rate.VerifyNonNegative();
-        TimeLeft = timeLeft;
+        TimeLeft = timeLeft.VerifyNonNegative();
         Message = message;
     }
 

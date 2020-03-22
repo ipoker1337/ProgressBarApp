@@ -20,7 +20,7 @@
         <common:ProgressToIndeterminateConverter x:Key="ProgressToIndeterminateConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
-        <!--  DownloadProgressBar DataTemplate  -->
+        <!--  ProgressBar DataTemplate  -->
         <DataTemplate DataType="{x:Type wpfApp2:ProgressViewModel}">
             <DataTemplate.Resources>
                 <Style TargetType="TextBlock">
@@ -58,10 +58,10 @@
                     Maximum="{Binding TargetValue}"
                     Style="{StaticResource LinearProgressBarStyle}"
                     Value="{Binding Value, Mode=OneWay}" />
-
             </Grid>
-
         </DataTemplate>
+
+
     </Window.Resources>
 
     <Border
