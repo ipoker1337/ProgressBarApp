@@ -57,7 +57,7 @@ Tests {
 
     internal class 
     TestProgressProvider : ProgressProvider {
-        public TestProgressProvider(SynchronizationContext sc) : base(sc) { }
+
         public new void Report(long value, long? targetValue, string message = "") => base.Report(value, targetValue, message);
         public new void Report(string message) => base.Report(message);
         public new void Report(long deltaValue) => base.Report(deltaValue);
@@ -66,7 +66,7 @@ Tests {
     [Test]
     public void 
     ProgressProviderTest() {
-        var provider = new TestProgressProvider(new TestSynchronizationContext());
+        var provider = new TestProgressProvider();
         Assert.AreEqual(null, provider.Progress);
 
         provider.Report(0, null);

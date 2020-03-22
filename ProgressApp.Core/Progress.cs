@@ -10,13 +10,11 @@ IProgressProvider {
     Progress? Progress { get; }
 }
 
-public class 
+public class
 ProgressProvider : IProgressProvider {
-    private readonly SynchronizationContext _synchronizationContext;
     private readonly RateEstimator _rateEstimator;
 
-    protected ProgressProvider(SynchronizationContext? context = null) {
-        _synchronizationContext = context ?? SynchronizationContextHelper.CurrentOrDefault;
+    protected ProgressProvider() {
         _rateEstimator = new RateEstimator(10);
     }
 
@@ -24,34 +22,34 @@ ProgressProvider : IProgressProvider {
 
 //Under development
 
-    protected void 
-    Report(long value, long? targetValue, string message = "") =>  _synchronizationContext.Post(_ => {
-        Progress = Core.Progress.Create(value, targetValue, message);
-    }, null);
+    protected void
+    Report(long value, long? targetValue, string message = "") =>
+    Progress = Core.Progress.Create(value, targetValue, message);
 
-    protected void 
+
+    protected void
     Report(long deltaValue) => CalculateAndPostUpdate(deltaValue);
 
-    protected void 
-    Report(string message) => _synchronizationContext.Post(_ => {
-        Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
-    }, null);
+    protected void
+    Report(string message) =>
+    Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
 
-    private void 
-    CalculateAndPostUpdate(long deltaValue = 0) => _synchronizationContext.Post(_ => {
+
+    private void
+    CalculateAndPostUpdate(long deltaValue = 0) {
+
         var p = Progress ?? Core.Progress.Create();
         _rateEstimator.Increment(deltaValue);
         var rate = _rateEstimator.GetCurrentRate();
         var newValue = p.Value + deltaValue.VerifyNonNegative();
         long timeLeft = 0;
-        if (p.TargetValue != null) 
+        if (p.TargetValue != null)
             timeLeft = rate > 0 ? (p.TargetValue.Value - newValue) / rate : 0;
         Progress = p.Update(newValue, rate, timeLeft.Seconds());
-    }, null);
-
+    }
 }
 
-public readonly struct 
+public class
 Progress {
     public long Value { get; } 
     public long? TargetValue { get; } 
