@@ -61,12 +61,12 @@ TestFileDownloader : ProgressProvider, IFileDownloader {
         if (!cancellationToken.IsCancellationRequested) {
             Report("Finishing...");
             Task.Delay(2000).Wait();
-            Report(0, 100, "Finished");
+            Report(0, 0, "Finished");
         }
         else {
             Report("Please wait...");
-            Task.Delay(2500).Wait();
-            Report(0, 100, "Canceled");
+            Task.Delay(2000).Wait();
+            Report(0, 0, "Canceled");
             return new DownloadResult();
         }
 

@@ -14,37 +14,28 @@ ProgressViewModel : ViewModelBase, IDisposable {
     public ProgressViewModel(IProgressProvider progressProvider) {
         _progressProvider = progressProvider;
 
-        _textTimer = new DispatcherTimer();
-        _textTimer.Interval = 500.Milliseconds();
-        _textTimer.Tick += OnTextUpdate;
-        _textTimer.Start();
+// Under development
+            _textTimer = new DispatcherTimer();
+            _textTimer.Interval = 500.Milliseconds();
+            _textTimer.Tick += OnTextUpdate;
+            _textTimer.Start();
 
         _progressTimer = new DispatcherTimer();
         _progressTimer.Interval = 100.Milliseconds();
         _progressTimer.Tick += OnProgressUpdate;
         _progressTimer.Start();
-
-        //_progressProvider.ProgressChanged += OnProgressChanged;
-        Text = "TEST";
     }
 
     private void OnProgressUpdate(object? sender, EventArgs e) {
         TargetValue = _progressProvider.Progress?.TargetValue ?? 0;
         Text = _progressProvider.Progress?.Message;
         Value = _progressProvider.Progress?.Value ?? 0;
+        //Progress = _progressProvider.Progress;
     }
 
 
     private void OnTextUpdate(object? sender, EventArgs e) {
         Progress = _progressProvider.Progress;
-    }
-
-    private void 
-    OnProgressChanged(Progress p) {
-        TargetValue = p.TargetValue;
-        Value = p.Value;
-        Text = p.Message;
-        Progress = p;
     }
 
     #region Properties
@@ -58,10 +49,7 @@ ProgressViewModel : ViewModelBase, IDisposable {
     private long _targetValue;
     public long TargetValue {
         get => _targetValue;
-        private set {
-            if (Value > value) Value = value;
-            SetPropertyIfChanged(ref _targetValue, value);
-        }
+        private set => SetPropertyIfChanged(ref _targetValue, value);
     }
 
     private Progress? _progress;

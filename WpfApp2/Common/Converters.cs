@@ -96,11 +96,16 @@ ProgressToStringConverter : IValueConverter {
             return string.Empty;
 
         var rate = p.Rate.FromBytes().ToReadable();
-        var targetValue = p.TargetValue.FromBytes().ToReadable();
-        var unit = p.TargetValue.FromBytes().LargestUnit;
-        var currentValue = p.Value.FromBytes().ToReadable(unit);
+
+        if (!p.TargetValue.HasValue || p.TargetValue < p.Value)
+            return $"{rate}/s - {p.Value.FromBytes().ToReadable()}";
+
+        var targetValue = p.TargetValue?.FromBytes().ToReadable();
+        var unit = p.TargetValue?.FromBytes().LargestUnit;
+        var currentValue = p.Value.FromBytes().ToReadable(unit ?? ByteConverter.Unit.Bytes);
 
         return $"{rate}/s - {currentValue} of {targetValue}, {p.TimeLeft.ToReadable()} left";
+
     }
 
     public object 
@@ -117,7 +122,7 @@ ProgressToIndeterminateConverter : IValueConverter {
         if (!(value is Progress))
             throw new InvalidOperationException("The target must be Progress");
         var progress = (Progress) value;
-        return progress.TargetValue < 1;
+        return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
 
     public object 

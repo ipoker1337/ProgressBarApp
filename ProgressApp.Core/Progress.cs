@@ -15,55 +15,68 @@ ProgressProvider : IProgressProvider {
     private readonly SynchronizationContext _synchronizationContext;
     private readonly RateEstimator _rateEstimator;
 
-    protected ProgressProvider() {
-        _synchronizationContext = SynchronizationContextHelper.CurrentOrDefault;
+    protected ProgressProvider(SynchronizationContext? context = null) {
+        _synchronizationContext = context ?? SynchronizationContextHelper.CurrentOrDefault;
         _rateEstimator = new RateEstimator(10);
     }
 
     public Progress? Progress { get; private set; }
 
-    protected void 
-    Report(long deltaValue, string? message = null) {
-        _synchronizationContext.Post(_ => {
-            _rateEstimator.Increment(deltaValue);
-            var rate = _rateEstimator.GetCurrentRate();
-            Progress = Progress?.Update(deltaValue, rate, message);
-        }, null);
-    }
+//Under development
 
     protected void 
-    Report(long value, long targetValue, string message) {
-        _synchronizationContext.Post(_ => {
-            Progress = Core.Progress.Create(value, targetValue, message);
-        }, null);
-    }
+    Report(long value, long? targetValue, string message = "") =>  _synchronizationContext.Post(_ => {
+        Progress = Core.Progress.Create(value, targetValue, message);
+    }, null);
 
     protected void 
-    Report(string message) {
-        _synchronizationContext.Post(_ => {
-            Progress = Progress?.WithMessage(message) ?? Core.Progress.Create(0, 0, message);
-        }, null);
-    }
+    Report(long deltaValue) => CalculateAndPostUpdate(deltaValue);
+
+    protected void 
+    Report(string message) => _synchronizationContext.Post(_ => {
+        Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
+    }, null);
+
+    private void 
+    CalculateAndPostUpdate(long deltaValue = 0) => _synchronizationContext.Post(_ => {
+        var p = Progress ?? Core.Progress.Create();
+        _rateEstimator.Increment(deltaValue);
+        var rate = _rateEstimator.GetCurrentRate();
+        var newValue = p.Value + deltaValue.VerifyNonNegative();
+        long timeLeft = 0;
+        if (p.TargetValue != null) 
+            timeLeft = rate > 0 ? (p.TargetValue.Value - newValue) / rate : 0;
+        Progress = p.Update(newValue, rate, timeLeft.Seconds());
+    }, null);
+
 }
 
 public readonly struct 
 Progress {
     public long Value { get; } 
-    public long TargetValue { get; } 
+    public long? TargetValue { get; } 
     public long Rate { get; }
     public TimeSpan TimeLeft { get; }
     public string Message { get; }
 
-    private Progress(long value, long targetValue, long rate, TimeSpan timeLeft, string message) {
+    private Progress(long value, long? targetValue, long rate, TimeSpan timeLeft, string message) {
         Value = value.VerifyNonNegative();
-        TargetValue = targetValue.VerifyNonNegative();
+        TargetValue = targetValue?.VerifyNonNegative();
         Rate = rate.VerifyNonNegative();
-        TimeLeft = timeLeft.VerifyNonNegative();
+        TimeLeft = timeLeft;
         Message = message;
     }
 
     public static Progress
-    Create(long value, long targetValue, string message) => new Progress(
+    Create() => new Progress(
+        value: 0,
+        targetValue: null,
+        rate: 0,
+        timeLeft: TimeSpan.Zero,
+        message: string.Empty);
+
+    public static Progress
+    Create(long value, long? targetValue, string message) => new Progress(
         value: value,
         targetValue: targetValue,
         rate: 0,
@@ -71,17 +84,13 @@ Progress {
         message: message);
 
     public Progress 
-    Update(long deltaValue, long rate, string? message) {
-        deltaValue.VerifyNonNegative();
-        var newValue = Value + deltaValue;
-        long timeLeft = 0;
-        if (TargetValue > 0 && rate > 0) 
-            timeLeft = (TargetValue - newValue) / rate;
-        return new Progress(newValue, TargetValue, rate, timeLeft.Seconds(), message ?? Message);
-    }
+    Update(long value, long rate, TimeSpan timeLeft) => new Progress(value, TargetValue, rate, timeLeft, Message);
 
     public Progress 
     WithMessage(string message) => new Progress(Value, TargetValue, Rate, TimeLeft, message);
+
+    public Progress 
+    WithRate(long rate) => new Progress(Value, TargetValue, rate.VerifyNonNegative(), TimeLeft, Message);
 
     public override string 
     ToString() => $"{Message}: {Rate} B/s - {Value} of {TargetValue}, {TimeLeft.ToReadable()} left";
@@ -111,8 +120,8 @@ RateEstimator {
     public void Increment(long value) => Increment(value, Now);
     public void Increment(long value, long timestamp) {
         ClearOld(timestamp);
-        int secondsSinceOldest = new TimeSpan(timestamp - _oldestTime).Seconds;
-        int currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
+        var secondsSinceOldest = new TimeSpan(timestamp - _oldestTime).Seconds;
+        var currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
         _array[currentIndex] += value;
     }
 
