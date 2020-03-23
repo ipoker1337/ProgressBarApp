@@ -13,6 +13,7 @@ MainViewModel : ViewModelBase, IDisposable {
 
     public MainViewModel() {
         var fileDownloader = new TestFileDownloader();
+        //var fileDownloader = new FileDownloader();
         Progress = new ProgressViewModel(fileDownloader);
 
         var cancelCommand = new RelayCommand(
@@ -24,7 +25,7 @@ MainViewModel : ViewModelBase, IDisposable {
             CommandText = "Cancel";
             Command = cancelCommand;
             _cancellationTokenSource = new CancellationTokenSource();
-            await fileDownloader.DownloadFileAsync(new Uri(@"http://www.source.com/"), "destination", _cancellationTokenSource.Token);
+            await fileDownloader.DownloadFileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), "filename",  _cancellationTokenSource.Token);
             CommandText = "Start";
             Command = _startCommand;
         });

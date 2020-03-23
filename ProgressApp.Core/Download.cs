@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading;
-using System.Diagnostics;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ProgressApp.Core {
 
@@ -16,8 +17,9 @@ public readonly struct
 DownloadResult {
 }
 
+
 public class
-TestFileDownloader : ProgressReporter, IFileDownloader {
+TestFileDownloader : ProgressProvider, IFileDownloader {
     
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName) => 
@@ -114,4 +116,61 @@ FileImporter {
 
 }
 
+// under development
+public class
+FileDownloader : ProgressProvider, IFileDownloader {
+    private static readonly HttpClient _httpClient = new HttpClient();
+
+    public async Task<DownloadResult>
+    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) => await Task.Run(async () => {
+        Report("Connecting...");
+        var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
+        Report(0, response.Content.Headers.ContentLength, "Downloading...");
+
+        using (var stream = await response.Content.ReadAsStreamAsync()) {
+            var position = 0L;
+            var buffer = new byte[4096];
+            var isMoreToRead = true;
+
+            while (isMoreToRead && !cancellationToken.IsCancellationRequested) {
+                var deltaValue = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                if (deltaValue == 0) isMoreToRead = false;
+                else {
+                    var data = new byte[deltaValue];
+                    buffer.ToList().CopyTo(0, data, 0, deltaValue);
+                    // write to disk
+                    position += deltaValue;
+                    Report(deltaValue);
+                }
+            }
+
+            if (!cancellationToken.IsCancellationRequested) {
+                Report("Finishing...");
+                Task.Delay(2000).Wait();
+                Report(0, 0, "Finished");
+            }
+            else {
+                Report("Canceled");
+                Task.Delay(2000).Wait();
+                Report(0, 0);
+                return new DownloadResult();
+            }
+
+            return new DownloadResult();
+        }
+    }).ConfigureAwait(false);
+
+
+    public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName) =>
+    throw new NotImplementedException();
+
+    public DownloadResult DownloadFile(Uri address, string fileName, CancellationToken cancellationToken) =>
+    throw new NotImplementedException();
 }
+//
+
+}
+
+

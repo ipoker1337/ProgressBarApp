@@ -17,10 +17,10 @@ IProgressReporter {
 }
 
 public class
-ProgressReporter : IHasProgress, IProgressReporter {
+ProgressProvider : IHasProgress, IProgressReporter {
     private readonly RateEstimator _rateEstimator;
 
-    public ProgressReporter() {
+    public ProgressProvider() {
         _rateEstimator = new RateEstimator(10);
     }
 
@@ -34,7 +34,7 @@ ProgressReporter : IHasProgress, IProgressReporter {
     Report(string message) =>
         Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
 
-    public void 
+    public void
     Report(long deltaValue) {
         var p = Progress ?? Core.Progress.Create();
         _rateEstimator.Increment(deltaValue);

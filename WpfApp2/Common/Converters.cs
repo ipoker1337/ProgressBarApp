@@ -9,9 +9,6 @@ namespace WpfApp2.Common {
 
     // 288 КБ/с - 3,8 МБ из 58,6 МБ, Осталось 3 мин.
     // 4.9 MB/s - 24.7 MB of 58.6 MB, 6 secs left
-    // 
-    // var bestUnit = TargetValue.Bytes.DetectLargestUnit()
-    // $"{Rate.Bytes}/s - Value.Bytes.To(bestUnit) of {TargetValue.Bytes} - {ETA.ToReadable()}"
 
 #region under development
 public struct 
@@ -105,12 +102,11 @@ ProgressToStringConverter : IValueConverter {
         var currentValue = p.Value.FromBytes().ToReadable(unit ?? ByteConverter.Unit.Bytes);
 
         return $"{rate}/s - {currentValue} of {targetValue}, {p.TimeLeft.ToReadable()} left";
-
     }
 
     public object 
     ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-    throw new NotImplementedException();
+        throw new NotImplementedException();
 }
 
 public class 

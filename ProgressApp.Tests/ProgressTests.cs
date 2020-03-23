@@ -52,7 +52,7 @@ ProgressTest {
     [Test]
     public void 
     ProgressProviderTest() {
-        var provider = new ProgressReporter();
+        var provider = new ProgressProvider();
         Assert.AreEqual(null, provider.Progress);
 
         provider.Report(0, null);
