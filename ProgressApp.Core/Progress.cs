@@ -17,11 +17,11 @@ IProgressReporter {
 }
 
 public class
-ProgressProvider : IHasProgress, IProgressReporter {
+ProgressReporter : IHasProgress, IProgressReporter {
     private readonly RateEstimator _rateEstimator;
 
-    public ProgressProvider() {
-        _rateEstimator = new RateEstimator(10);
+    public ProgressReporter() {
+        _rateEstimator = new RateEstimator();
     }
 
     public Progress? Progress { get; private set; }
@@ -32,11 +32,11 @@ ProgressProvider : IHasProgress, IProgressReporter {
 
     public void
     Report(string message) =>
-        Progress = Progress?.WithMessage(message) ?? Core.Progress.Create().WithMessage(message);
+        Progress = Progress?.WithMessage(message) ?? Progress.Create().WithMessage(message);
 
     public void
     Report(long deltaValue) {
-        var p = Progress ?? Core.Progress.Create();
+        var p = Progress ?? Progress.Create();
         var rate = _rateEstimator.GetCurrentRate(deltaValue);
         var newValue = p.Value + deltaValue.VerifyNonNegative();
         long timeLeft = 0;
@@ -103,17 +103,17 @@ RateEstimator {
     private int _intervalCount;
     private long _oldestTime;
 
-    public RateEstimator(int timeIntervalSeconds) 
+    public RateEstimator(int timeIntervalSeconds = 10) 
         : this(timeIntervalSeconds, Stopwatch.GetTimestamp()) { }
 
-    public RateEstimator(int timeIntervalSeconds, long timestamp) {
+    public RateEstimator(int timeIntervalSeconds, long timeStamp) {
         timeIntervalSeconds.VerifyNonNegative();
         _array = new long[timeIntervalSeconds];
-        Reset(timestamp);
+        Reset(timeStamp);
     }
 
     public long 
-    GetCurrentRate(long deltaValue) => GetCurrentRate(deltaValue, Stopwatch.GetTimestamp());
+    GetCurrentRate(long deltaValue = 0) => GetCurrentRate(deltaValue, Stopwatch.GetTimestamp());
 
     public long 
     GetCurrentRate(long deltaValue, long timeStamp) {

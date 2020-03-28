@@ -19,7 +19,7 @@ DownloadResult {
 
 
 public class
-TestFileDownloader : ProgressProvider, IFileDownloader {
+TestFileDownloader : ProgressReporter, IFileDownloader {
     
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName) => 
@@ -113,13 +113,16 @@ FileImporter {
 
          return new ImportResult();
     }
-
 }
 
 // under development
 public class
-FileDownloader : ProgressProvider, IFileDownloader {
-    private static readonly HttpClient _httpClient = new HttpClient();
+FileDownloader : ProgressReporter, IFileDownloader {
+    private static readonly HttpClient _httpClient;
+
+    static FileDownloader() {
+        _httpClient = new HttpClient();
+    }
 
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken)  {
