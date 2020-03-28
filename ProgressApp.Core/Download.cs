@@ -122,14 +122,14 @@ FileDownloader : ProgressProvider, IFileDownloader {
     private static readonly HttpClient _httpClient = new HttpClient();
 
     public async Task<DownloadResult>
-    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) => await Task.Run(async () => {
+    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken)  {
         Report("Connecting...");
-        var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
             throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
         Report(0, response.Content.Headers.ContentLength, "Downloading...");
 
-        using (var stream = await response.Content.ReadAsStreamAsync()) {
+        using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
             var position = 0L;
             var buffer = new byte[4096];
             var isMoreToRead = true;
@@ -160,7 +160,7 @@ FileDownloader : ProgressProvider, IFileDownloader {
 
             return new DownloadResult();
         }
-    }).ConfigureAwait(false);
+    }
 
 
     public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName) =>

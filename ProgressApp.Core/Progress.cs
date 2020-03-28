@@ -37,12 +37,11 @@ ProgressProvider : IHasProgress, IProgressReporter {
     public void
     Report(long deltaValue) {
         var p = Progress ?? Core.Progress.Create();
-        _rateEstimator.Increment(deltaValue);
-        var rate = _rateEstimator.GetCurrentRate();
+        var rate = _rateEstimator.GetCurrentRate(deltaValue);
         var newValue = p.Value + deltaValue.VerifyNonNegative();
         long timeLeft = 0;
-        if (p.TargetValue != null && p.TargetValue.Value > newValue)
-            timeLeft = rate > 0 ? (p.TargetValue.Value - newValue) / rate : 0;
+        if (p.TargetValue != null && p.TargetValue.Value > newValue && rate > 0)
+            timeLeft = (p.TargetValue.Value - newValue) / rate;
         Progress = p.Update(newValue, rate, timeLeft.Seconds());
     }
 }
@@ -104,27 +103,29 @@ RateEstimator {
     private int _intervalCount;
     private long _oldestTime;
 
-    public RateEstimator(int timeIntervalSec) 
-        : this(timeIntervalSec, Stopwatch.GetTimestamp()) { }
+    public RateEstimator(int timeIntervalSeconds) 
+        : this(timeIntervalSeconds, Stopwatch.GetTimestamp()) { }
 
-    public RateEstimator(int timeIntervalSec, long timestamp) {
-        timeIntervalSec.VerifyNonNegative();
-        _array = new long[timeIntervalSec];
+    public RateEstimator(int timeIntervalSeconds, long timestamp) {
+        timeIntervalSeconds.VerifyNonNegative();
+        _array = new long[timeIntervalSeconds];
         Reset(timestamp);
     }
 
-    public void Increment(long value) => Increment(value, Now);
-    public void Increment(long value, long timestamp) {
-        ClearOld(timestamp);
-        var secondsSinceOldest = new TimeSpan(timestamp - _oldestTime).Seconds;
+    public long 
+    GetCurrentRate(long deltaValue) => GetCurrentRate(deltaValue, Stopwatch.GetTimestamp());
+
+    public long 
+    GetCurrentRate(long deltaValue, long timeStamp) {
+        ClearOldData(timeStamp);
+        var secondsSinceOldest = new TimeSpan(timeStamp - _oldestTime).Seconds;
         var currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
-        _array[currentIndex] += value;
+        _array[currentIndex] += deltaValue;
+        return CalculateRate();
     }
 
-    public long GetCurrentRate() => GetCurrentRate(Now);
-
-    public long GetCurrentRate(long timestamp) {
-        ClearOld(timestamp);
+    private long 
+    CalculateRate() {
         long total = 0;
         for (var i = 0; i < _intervalCount; i++) {
             var index = (_oldestIndex + i) % _array.Length;
@@ -133,7 +134,18 @@ RateEstimator {
         return total / _intervalCount;
     }
 
-    private void ClearOld(long timestamp) {
+    private void 
+    Reset(long timestamp) {
+        for (var i=0; i < _array.Length; i++) {
+            _array[i] = 0;
+        }
+        _oldestIndex = 0;
+        _intervalCount = 1;
+        _oldestTime = timestamp;
+    }
+
+    private void 
+    ClearOldData(long timestamp) {
         var secondsSinceOldest = new TimeSpan(timestamp - _oldestTime).Seconds;
         if (secondsSinceOldest < 0) {
             Reset(timestamp);
@@ -157,20 +169,8 @@ RateEstimator {
             _oldestIndex = (_oldestIndex + 1) % _array.Length;
             _oldestTime += TicksFromSeconds(1);
         }
-    }
 
-    private long Now => Stopwatch.GetTimestamp();
-
-    private static long TicksFromSeconds(double seconds) => 
-        (long)(Stopwatch.Frequency * seconds);
-
-    private void Reset(long timestamp) {
-        for (var i=0; i < _array.Length; i++) {
-            _array[i] = 0;
-        }
-        _oldestIndex = 0;
-        _intervalCount = 1;
-        _oldestTime = timestamp;
+        long TicksFromSeconds(double seconds) => (long)(Stopwatch.Frequency * seconds);
     }
 }
 #endregion
