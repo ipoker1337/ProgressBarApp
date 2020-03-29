@@ -4,7 +4,7 @@ using ProgressApp.Core.Common;
 
 namespace ProgressApp.Core {
 
-public interface 
+public interface
 IHasProgress {
     Progress? Progress { get; }
 }
@@ -18,11 +18,8 @@ IProgressReporter {
 
 public class
 ProgressReporter : IHasProgress, IProgressReporter {
-    private readonly RateEstimator _rateEstimator;
 
-    public ProgressReporter() {
-        _rateEstimator = new RateEstimator();
-    }
+    private readonly RateEstimator _rateEstimator = new RateEstimator();
 
     public Progress? Progress { get; private set; }
 
@@ -128,7 +125,8 @@ RateEstimator {
             _array[currentIndex] += deltaValue;
         }
 
-        long CalculateRate() {
+        long
+        CalculateRate() {
             long total = 0;
             for (var i = 0; i < _intervalCount; i++) {
                 var index = (_oldestIndex + i) % _array.Length;
