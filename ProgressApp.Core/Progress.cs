@@ -118,20 +118,24 @@ RateEstimator {
     public long 
     GetCurrentRate(long deltaValue, long timeStamp) {
         ClearOldData(timeStamp);
-        var secondsSinceOldest = new TimeSpan(timeStamp - _oldestTime).Seconds;
-        var currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
-        _array[currentIndex] += deltaValue;
+        Increment(deltaValue, timeStamp);
         return CalculateRate();
-    }
-
-    private long 
-    CalculateRate() {
-        long total = 0;
-        for (var i = 0; i < _intervalCount; i++) {
-            var index = (_oldestIndex + i) % _array.Length;
-            total += _array[index];
+    
+        void
+        Increment(long deltaValue, long timeStamp) {
+            var secondsSinceOldest = new TimeSpan(timeStamp - _oldestTime).Seconds;
+            var currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
+            _array[currentIndex] += deltaValue;
         }
-        return total / _intervalCount;
+
+        long CalculateRate() {
+            long total = 0;
+            for (var i = 0; i < _intervalCount; i++) {
+                var index = (_oldestIndex + i) % _array.Length;
+                total += _array[index];
+            }
+            return total / _intervalCount;
+        }
     }
 
     private void 
