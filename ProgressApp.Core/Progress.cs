@@ -18,7 +18,6 @@ IProgressReporter {
 
 public class
 ProgressReporter : IHasProgress, IProgressReporter {
-
     private readonly RateEstimator _rateEstimator = new RateEstimator();
 
     public Progress? Progress { get; private set; }

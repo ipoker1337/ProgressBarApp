@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -125,46 +126,56 @@ FileDownloader : ProgressReporter, IFileDownloader {
     }
 
     public async Task<DownloadResult>
-    DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken)  {
-        Report("Connecting...");
-        var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
-            throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
-        Report(0, response.Content.Headers.ContentLength, "Downloading...");
+    DownloadFileAsync(Uri address, Stream stream, CancellationToken cancellationToken) => await Task.Run(async () =>  {
+        try {
+            if (!stream.CanWrite)
+                throw new ArgumentException("stream doesn't support write operations");
 
-        using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
-            var position = 0L;
-            var buffer = new byte[4096];
-            var isMoreToRead = true;
+            Report("Connecting...");
+            Task.Delay(2000).Wait();
+            var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead,
+                                                      cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
+            Report(0, response.Content.Headers.ContentLength, "Downloading...");
 
-            while (isMoreToRead && !cancellationToken.IsCancellationRequested) {
-                var deltaValue = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-                if (deltaValue == 0) isMoreToRead = false;
+            using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
+                stream.CopyTo(stream);
+                var position = 0L;
+                var buffer = new byte[4096];
+                var isMoreToRead = true;
+
+                while (isMoreToRead && !cancellationToken.IsCancellationRequested) {
+                    var deltaValue = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                    if (deltaValue == 0) isMoreToRead = false;
+                    else {
+                        var data = new byte[deltaValue];
+                        buffer.ToList().CopyTo(0, data, 0, deltaValue);
+                        // write to disk
+                        position += deltaValue;
+                        Report(deltaValue);
+                    }
+                }
+
+                if (!cancellationToken.IsCancellationRequested) {
+                    Report("Finishing...");
+                    Task.Delay(2000).Wait();
+                    Report(0, 0, "Finished");
+                }
                 else {
-                    var data = new byte[deltaValue];
-                    buffer.ToList().CopyTo(0, data, 0, deltaValue);
-                    // write to disk
-                    position += deltaValue;
-                    Report(deltaValue);
+                    Report("Canceled");
+                    Task.Delay(2000).Wait();
+                    Report(0, 0);
+                    return new DownloadResult();
                 }
             }
-
-            if (!cancellationToken.IsCancellationRequested) {
-                Report("Finishing...");
-                Task.Delay(2000).Wait();
-                Report(0, 0, "Finished");
-            }
-            else {
-                Report("Canceled");
-                Task.Delay(2000).Wait();
-                Report(0, 0);
-                return new DownloadResult();
-            }
-
-            return new DownloadResult();
         }
-    }
+        catch (Exception ex) { }
+        return new DownloadResult();
+    }).ConfigureAwait(false);
 
+    public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) =>
+    throw new NotImplementedException();
 
     public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName) =>
     throw new NotImplementedException();

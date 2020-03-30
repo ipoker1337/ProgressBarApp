@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Input;
 using ProgressApp.Core;
@@ -12,8 +13,8 @@ MainViewModel : ViewModelBase, IDisposable {
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
     public MainViewModel() {
-        var fileDownloader = new TestFileDownloader();
-        //var fileDownloader = new FileDownloader();
+        //var fileDownloader = new TestFileDownloader();
+        var fileDownloader = new FileDownloader();
         Progress = new ProgressViewModel(fileDownloader);
 
         var cancelCommand = new RelayCommand(
@@ -25,7 +26,7 @@ MainViewModel : ViewModelBase, IDisposable {
             CommandText = "Cancel";
             Command = cancelCommand;
             _cancellationTokenSource = new CancellationTokenSource();
-            await fileDownloader.DownloadFileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), "filename",  _cancellationTokenSource.Token);
+            await fileDownloader.DownloadFileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), Stream.Null,  _cancellationTokenSource.Token);
             CommandText = "Start";
             Command = _startCommand;
         });
