@@ -17,6 +17,7 @@ IProgressHandler {
     void Report(long value, long? targetValue, string message);
     void Report(long deltaValue);
     void Report(string message);
+    void Reset();
 }
 
 public class
@@ -32,6 +33,8 @@ ProgressHandler : IProgressHandler, IHasProgress {
     public void
     Report(string message) =>
         Progress = Progress?.WithMessage(message) ?? Progress.Create().WithMessage(message);
+
+    public void Reset() => Progress = null;
 
     public void
     Report(long deltaValue) {

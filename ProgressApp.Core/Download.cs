@@ -11,20 +11,25 @@ namespace ProgressApp.Core {
 public class 
 DownloadResult {
     public bool IsSuccess { get; }
+    public bool IsCanceled { get; }
     public Exception? Exception { get; }
     public long TotalBytesReceived { get; }
 
-    private DownloadResult(long totalBytesReceived, bool isSuccess, Exception? exception = null) { 
+    private DownloadResult(long totalBytesReceived, bool isSuccess, bool isCanceled, Exception? exception = null) { 
         TotalBytesReceived = totalBytesReceived.VerifyNonNegative();
         IsSuccess = isSuccess;
+        IsCanceled = isCanceled;
         Exception = exception;
     }
 
     public static DownloadResult 
-    Success() => new DownloadResult(0, true);
+    Success(long totalBytesReceived) => new DownloadResult(totalBytesReceived, isSuccess: true, isCanceled: false);
 
     public static DownloadResult 
-    Error(long totalBytesReceived, Exception? exception = null) => new DownloadResult(totalBytesReceived, false, exception);
+    Error(long totalBytesReceived, Exception? exception) => new DownloadResult(totalBytesReceived, isSuccess: false, isCanceled: false, exception);
+
+    public static DownloadResult
+    Cancel(long totalBytesReceived) => new DownloadResult(totalBytesReceived, isSuccess: false, isCanceled: true);
 }
 
 // under development
@@ -44,7 +49,7 @@ Download {
                                                      cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
-            progress?.Report(0, response.Content.Headers.ContentLength, "Downloading...");
+            progress?.Report(position, response.Content.Headers.ContentLength, "Downloading...");
 
             await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             var buffer = new byte[4096];
@@ -67,8 +72,8 @@ Download {
         catch (OperationCanceledException) {
             progress?.Report("Canceled");
             Task.Delay(2000).Wait();
-            progress?.Report(0, 0, "Canceled");
-            return DownloadResult.Error(position);
+            progress?.Reset();
+            return DownloadResult.Cancel(position);
         }
         catch (Exception ex) { 
             progress?.Report(0, 0, "Error");
@@ -77,8 +82,8 @@ Download {
 
         progress?.Report("Finishing...");
         Task.Delay(2000).Wait();
-        progress?.Report(0, 0, "Finished");
-        return DownloadResult.Success();
+        progress?.Reset();
+        return DownloadResult.Success(position);
     }
 }
 
@@ -119,14 +124,14 @@ TestFileDownloader : ProgressHandler {
             Report("Canceled");
             Task.Delay(2000).Wait();
             Report(0, 0);
-            return DownloadResult.Error(position);
+            return DownloadResult.Cancel(position);
         }
 
         Report("Finishing...");
         Task.Delay(2000).Wait();
         Report(0, 0, "Finished");
 
-        return DownloadResult.Success();
+        return DownloadResult.Success(position);
     }
 }
 
