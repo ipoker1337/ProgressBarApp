@@ -11,14 +11,14 @@ Time {
     public static TimeSpan
     VerifyNonNegative(this TimeSpan value) {
         if (value < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException("Cannot be negative");
+            throw new ArgumentOutOfRangeException("TimeSpan cannot be negative");
         return value;
     }
 
     public static TimeSpan
     VerifyGreaterZero(this TimeSpan value) {
         if (value <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException("Cannot be 0 or negative");
+            throw new ArgumentOutOfRangeException("TimeSpan should be greater zero");
         return value;
     }
 

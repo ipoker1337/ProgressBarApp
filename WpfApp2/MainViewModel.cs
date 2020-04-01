@@ -10,24 +10,27 @@ namespace WpfApp2 {
 public class 
 MainViewModel : ViewModelBase, IDisposable {
     private readonly ICommand _startCommand;
+    private readonly ICommand _cancelCommand;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
     public MainViewModel() {
-        var fileDownloader = new TestFileDownloader();
-        //var progressHandler = new ProgressHandler();
-        Progress = new ProgressViewModel(fileDownloader);
+        var progressHandler = new ProgressHandler();
+        Progress = new ProgressViewModel(progressHandler);
 
-        var cancelCommand = new RelayCommand(
+        _cancelCommand = new RelayCommand(
             () => { _cancellationTokenSource.Cancel(); }, 
             () => !_cancellationTokenSource.IsCancellationRequested);
 
-        CommandText = "Start";
         Command = _startCommand = new RelayCommand(async () => {
             CommandText = "Cancel";
-            Command = cancelCommand;
+            Command = _cancelCommand;
+
             _cancellationTokenSource = new CancellationTokenSource();
-            //await Download.FileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), Stream.Null,  _cancellationTokenSource.Token, progressHandler);
-            var result = await fileDownloader.DownloadFileAsync(new Uri(@"https://source"), "dest", _cancellationTokenSource.Token);
+            var result = await Download.FileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), Stream.Null,  _cancellationTokenSource.Token, progressHandler);
+
+            if (!result.IsSuccess && result.Exception != null)
+                progressHandler.Report("Error: " + result.Exception.Message);
+
             CommandText = "Start";
             Command = _startCommand;
         });
@@ -41,7 +44,7 @@ MainViewModel : ViewModelBase, IDisposable {
         set => SetPropertyIfChanged(ref _command, value);
     }
 
-    private string _commandText = string.Empty;
+    private string _commandText = "Start";
     public string CommandText {
         get => _commandText;
         set => SetPropertyIfChanged(ref _commandText, value);

@@ -1,10 +1,9 @@
-using System;
 using System.Diagnostics;
-using System.Threading;
 using NUnit.Framework;
 using ProgressApp.Core;
 
 namespace ProgressApp.Tests {
+
 public class 
 ProgressTest {
 
@@ -46,37 +45,37 @@ ProgressTest {
 
     [Test]
     public void 
-    ProgressProviderTest() {
-        var provider = new ProgressHandler();
-        Assert.AreEqual(null, provider.Progress);
+    ProgressHandlerTest() {
+        var handler = new ProgressHandler();
+        Assert.AreEqual(null, handler.Progress);
 
-        provider.Report(0, null);
-        Assert.AreEqual(0, provider.Progress?.Value);
-        Assert.AreEqual(null, provider.Progress?.TargetValue);
-        provider.Report(0, 100);
-        Assert.AreEqual(100, provider.Progress?.TargetValue);
+        handler.Report(0, null);
+        Assert.AreEqual(0, handler.Progress?.Value);
+        Assert.AreEqual(null, handler.Progress?.TargetValue);
+        handler.Report(0, 100);
+        Assert.AreEqual(100, handler.Progress?.TargetValue);
 
         const string test = "test";
-        provider.Report(10, null, test);
-        Assert.AreEqual(10, provider.Progress?.Value);
-        Assert.AreEqual(null, provider.Progress?.TargetValue);
-        Assert.AreEqual(test, provider.Progress?.Message);
+        handler.Report(10, null, test);
+        Assert.AreEqual(10, handler.Progress?.Value);
+        Assert.AreEqual(null, handler.Progress?.TargetValue);
+        Assert.AreEqual(test, handler.Progress?.Message);
 
         const string hello = "hello";
-        provider.Report(hello);
-        Assert.AreEqual(10, provider.Progress?.Value);
-        Assert.AreEqual(null, provider.Progress?.TargetValue);
-        Assert.AreEqual(hello, provider.Progress?.Message);
+        handler.Report(hello);
+        Assert.AreEqual(10, handler.Progress?.Value);
+        Assert.AreEqual(null, handler.Progress?.TargetValue);
+        Assert.AreEqual(hello, handler.Progress?.Message);
 
-        provider.Report(100);
-        Assert.AreEqual(110, provider.Progress?.Value);
-        Assert.AreEqual(null, provider.Progress?.TargetValue);
-        Assert.AreEqual(hello, provider.Progress?.Message);
+        handler.Report(100);
+        Assert.AreEqual(110, handler.Progress?.Value);
+        Assert.AreEqual(null, handler.Progress?.TargetValue);
+        Assert.AreEqual(hello, handler.Progress?.Message);
 
-        provider.Report(100, 200, test);
-        Assert.AreEqual(100, provider.Progress?.Value);
-        Assert.AreEqual(200, provider.Progress?.TargetValue);
-        Assert.AreEqual(test, provider.Progress?.Message);
+        handler.Report(100, 200, test);
+        Assert.AreEqual(100, handler.Progress?.Value);
+        Assert.AreEqual(200, handler.Progress?.TargetValue);
+        Assert.AreEqual(test, handler.Progress?.Message);
     }
 
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using ProgressApp.Core.Common;
 
 namespace ProgressApp.Tests {
@@ -19,8 +15,6 @@ TimeTests {
         Assert.AreEqual("2 secs", 2.Seconds().ToReadable());
         Assert.AreEqual("2 mins", 2.Minutes().ToReadable());
         Assert.AreEqual("2 hours", 2.Hours().ToReadable());
-
-       
     }
 }
 }
