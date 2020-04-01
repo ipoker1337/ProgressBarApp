@@ -13,20 +13,21 @@ MainViewModel : ViewModelBase, IDisposable {
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
     public MainViewModel() {
-        //var fileDownloader = new TestFileDownloader();
-        var fileDownloader = new FileDownloader();
+        var fileDownloader = new TestFileDownloader();
+        //var progressHandler = new ProgressHandler();
         Progress = new ProgressViewModel(fileDownloader);
 
         var cancelCommand = new RelayCommand(
             () => { _cancellationTokenSource.Cancel(); }, 
             () => !_cancellationTokenSource.IsCancellationRequested);
-        CommandText = "Start";
 
+        CommandText = "Start";
         Command = _startCommand = new RelayCommand(async () => {
             CommandText = "Cancel";
             Command = cancelCommand;
             _cancellationTokenSource = new CancellationTokenSource();
-            await fileDownloader.DownloadFileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), Stream.Null,  _cancellationTokenSource.Token);
+            //await Download.FileAsync(new Uri(@"https://speed.hetzner.de/100MB.bin"), Stream.Null,  _cancellationTokenSource.Token, progressHandler);
+            var result = await fileDownloader.DownloadFileAsync(new Uri(@"https://source"), "dest", _cancellationTokenSource.Token);
             CommandText = "Start";
             Command = _startCommand;
         });

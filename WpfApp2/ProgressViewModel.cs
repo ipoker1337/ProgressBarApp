@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
 using System.Windows.Threading;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
@@ -9,12 +7,12 @@ namespace WpfApp2 {
 
 public class 
 ProgressViewModel : ViewModelBase, IDisposable {
-    private readonly IHasProgress _provider;
+    private readonly IHasProgress _progress;
     private readonly DispatcherTimer _textTimer;
     private readonly DispatcherTimer _progressTimer;
 
-    public ProgressViewModel(IHasProgress provider) {
-        _provider = provider;
+    public ProgressViewModel(IHasProgress progress) {
+        _progress = progress;
 
 // Under development
             _textTimer = new DispatcherTimer();
@@ -29,15 +27,15 @@ ProgressViewModel : ViewModelBase, IDisposable {
     }
 
     private void OnProgressUpdate(object? sender, EventArgs e) {
-        TargetValue = _provider.Progress?.TargetValue ?? 0;
-        Text = _provider.Progress?.Message;
-        Value = _provider.Progress?.Value ?? 0;
+        TargetValue = _progress.Progress?.TargetValue ?? 0;
+        Text = _progress.Progress?.Message;
+        Value = _progress.Progress?.Value ?? 0;
         //Progress = _progressProvider.Progress;
     }
 
 
     private void OnTextUpdate(object? sender, EventArgs e) {
-        Progress = _provider.Progress;
+        Progress = _progress.Progress;
     }
 
     #region Properties
@@ -54,10 +52,10 @@ ProgressViewModel : ViewModelBase, IDisposable {
         private set => SetPropertyIfChanged(ref _targetValue, value);
     }
 
-    private Progress? _progress;
+    private Progress? _progressProperty;
     public Progress? Progress {
-        get => _progress;
-        set => SetPropertyIfChanged(ref _progress, value);
+        get => _progressProperty;
+        set => SetPropertyIfChanged(ref _progressProperty, value);
     }
 
     private string? _text = string.Empty;

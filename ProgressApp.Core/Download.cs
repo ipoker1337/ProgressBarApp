@@ -7,20 +7,21 @@ using System.Linq;
 
 namespace ProgressApp.Core {
 
-public interface 
-IFileDownloader {
-    Task<DownloadResult> DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken);
-    Task<DownloadResult> DownloadFileAsync(Uri address, string fileName);
-    DownloadResult DownloadFile(Uri address, string fileName, CancellationToken cancellationToken);
-}
-
 public readonly struct 
 DownloadResult {
+    public bool IsCompleted { get; }
+    public Exception? Exception { get; }
+    public long TotalBytesReceived { get; }
+
+    public DownloadResult(long totalBytesReceived, bool isCompleted, Exception? exception = null) { 
+        TotalBytesReceived = totalBytesReceived;
+        IsCompleted = isCompleted;
+        Exception = exception;
+    }
 }
 
-
 public class
-TestFileDownloader : ProgressReporter, IFileDownloader {
+TestFileDownloader : ProgressHandler {
     
     public async Task<DownloadResult>
     DownloadFileAsync(Uri address, string fileName) => 
@@ -32,16 +33,15 @@ TestFileDownloader : ProgressReporter, IFileDownloader {
 
     public DownloadResult
     DownloadFile(Uri address, string fileName, CancellationToken cancellationToken) {
-        Report("Connecting...");
-
         Random random = new Random();
         long position = 0;
         long totalBytesToDownload = 1 + random.Next(30) * 1_000_000;
         int averageSpeedBytesPerSec = random.Next(3_000_000);
 
+        Report("Connecting...");
         Task.Delay(2000).Wait();
-
         Report("Connected");
+
         Task.Delay(random.Next(1000 / 20)).Wait();
         Report(0, totalBytesToDownload, "Downloading...");
 
@@ -53,19 +53,18 @@ TestFileDownloader : ProgressReporter, IFileDownloader {
             Report(deltaValue);
         }
 
-        if (!cancellationToken.IsCancellationRequested) {
-            Report("Finishing...");
-            Task.Delay(2000).Wait();
-            Report(0, 0, "Finished");
-        }
-        else {
+        if (cancellationToken.IsCancellationRequested) {
             Report("Canceled");
             Task.Delay(2000).Wait();
             Report(0, 0);
-            return new DownloadResult();
+            return new DownloadResult(position, false);
         }
 
-        return new DownloadResult();
+        Report("Finishing...");
+        Task.Delay(2000).Wait();
+        Report(0, 0, "Finished");
+
+        return new DownloadResult(position, true);
     }
 }
 
@@ -77,11 +76,11 @@ public static class
 FileImporter {
 
     public static async Task<ImportResult>
-    ImportAsync(IProgressReporter progress, CancellationToken cancellationToken) =>
+    ImportAsync(IProgressHandler progress, CancellationToken cancellationToken) =>
         await Task.Run( () => Import(progress, cancellationToken)).ConfigureAwait(false);
 
     public static ImportResult 
-    Import(IProgressReporter progress, CancellationToken cancellationToken) {
+    Import(IProgressHandler progress, CancellationToken cancellationToken) {
         progress.Report("Initializing...");
 
         Random random = new Random();
@@ -117,74 +116,52 @@ FileImporter {
 }
 
 // under development
-public class
-FileDownloader : ProgressReporter, IFileDownloader {
-    private static readonly HttpClient _httpClient;
+public static class
+Download {
+    private static readonly HttpClient _httpClient = new HttpClient();
 
-    static FileDownloader() {
-        _httpClient = new HttpClient();
-    }
+    public static async Task<DownloadResult>
+    FileAsync(Uri address, Stream toStream, CancellationToken cancellationToken, IProgressHandler? progress) {
+        if (!toStream.CanWrite)
+            throw new ArgumentException("stream doesn't support write operations");
+        progress?.Report("Connecting...");
+        var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead,
+                                                  cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
+        progress?.Report(0, response.Content.Headers.ContentLength, "Downloading...");
 
-    public async Task<DownloadResult>
-    DownloadFileAsync(Uri address, Stream stream, CancellationToken cancellationToken) => await Task.Run(async () =>  {
-        try {
-            if (!stream.CanWrite)
-                throw new ArgumentException("stream doesn't support write operations");
+        await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var position = 0L;
+        var buffer = new byte[4096];
+        var isMoreToRead = true;
 
-            Report("Connecting...");
-            Task.Delay(2000).Wait();
-            var response = await _httpClient.GetAsync(address, HttpCompletionOption.ResponseHeadersRead,
-                                                      cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
-            Report(0, response.Content.Headers.ContentLength, "Downloading...");
-
-            using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
-                stream.CopyTo(stream);
-                var position = 0L;
-                var buffer = new byte[4096];
-                var isMoreToRead = true;
-
-                while (isMoreToRead && !cancellationToken.IsCancellationRequested) {
-                    var deltaValue = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-                    if (deltaValue == 0) isMoreToRead = false;
-                    else {
-                        var data = new byte[deltaValue];
-                        buffer.ToList().CopyTo(0, data, 0, deltaValue);
-                        // write to disk
-                        position += deltaValue;
-                        Report(deltaValue);
-                    }
-                }
-
-                if (!cancellationToken.IsCancellationRequested) {
-                    Report("Finishing...");
-                    Task.Delay(2000).Wait();
-                    Report(0, 0, "Finished");
-                }
-                else {
-                    Report("Canceled");
-                    Task.Delay(2000).Wait();
-                    Report(0, 0);
-                    return new DownloadResult();
-                }
+        while (isMoreToRead && !cancellationToken.IsCancellationRequested) {
+            var deltaValue = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+            if (deltaValue == 0)
+                isMoreToRead = false;
+            else {
+                var data = new byte[deltaValue];
+                buffer.ToList().CopyTo(0, data, 0, deltaValue);
+                // write to disk
+                position += deltaValue;
+                progress?.Report(deltaValue);
             }
         }
-        catch (Exception ex) { }
-        return new DownloadResult();
-    }).ConfigureAwait(false);
 
-    public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName, CancellationToken cancellationToken) =>
-    throw new NotImplementedException();
+        if (cancellationToken.IsCancellationRequested) {
+            progress?.Report("Canceled");
+            Task.Delay(2000).Wait();
+            progress?.Report(0, 0, "Canceled");
+            return new DownloadResult(position, false);
+        }
 
-    public Task<DownloadResult> DownloadFileAsync(Uri address, string fileName) =>
-    throw new NotImplementedException();
-
-    public DownloadResult DownloadFile(Uri address, string fileName, CancellationToken cancellationToken) =>
-    throw new NotImplementedException();
+        progress?.Report("Finishing...");
+        Task.Delay(2000).Wait();
+        progress?.Report(0, 0, "Finished");
+        return new DownloadResult(position, true);
+    }
 }
-//
-
 }
 
 

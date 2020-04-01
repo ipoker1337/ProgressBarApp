@@ -9,15 +9,18 @@ IHasProgress {
     Progress? Progress { get; }
 }
 
+/// <summary>
+/// Интерфейс для отчетов о прогрессе. Ожидается, что интерфейс используется только из одного потока.
+/// </summary>
 public interface 
-IProgressReporter {
+IProgressHandler {
     void Report(long value, long? targetValue, string message);
     void Report(long deltaValue);
     void Report(string message);
 }
 
 public class
-ProgressReporter : IHasProgress, IProgressReporter {
+ProgressHandler : IProgressHandler, IHasProgress {
     private readonly RateEstimator _rateEstimator = new RateEstimator();
 
     public Progress? Progress { get; private set; }
@@ -89,8 +92,6 @@ Progress {
 
 #region under development
 // Есть подоздрение, что это не functional first стиль :) 
-// Это временный вариант
-
 // ringbuffer, в конструкторе принимает интервал в секундах за который считается средняя скорость
 public sealed class 
 RateEstimator {
