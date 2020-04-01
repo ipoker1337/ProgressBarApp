@@ -48,7 +48,7 @@ Download {
             var response = await HttpClient.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead,
                                                      cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"The request returned with HTTP status code {response.StatusCode}");
+                throw new Exception($"The request returned {response.StatusCode}");
             progress?.Report(position, response.Content.Headers.ContentLength, "Downloading...");
 
             await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -72,17 +72,15 @@ Download {
         catch (OperationCanceledException) {
             progress?.Report("Canceled");
             Task.Delay(2000).Wait();
-            progress?.Reset();
             return DownloadResult.Cancel(position);
         }
-        catch (Exception ex) { 
-            progress?.Report(0, 0, "Error");
+        catch (Exception ex) {
             return DownloadResult.Error(position, ex);
         }
 
         progress?.Report("Finishing...");
         Task.Delay(2000).Wait();
-        progress?.Reset();
+        progress?.Report("Finished");
         return DownloadResult.Success(position);
     }
 }
