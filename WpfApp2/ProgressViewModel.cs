@@ -23,7 +23,8 @@ ProgressViewModel : ViewModelBase, IDisposable {
         _progressTimer = new DispatcherTimer();
         _progressTimer.Interval = 100.Milliseconds();
         _progressTimer.Tick += OnProgressUpdate;
-        _progressTimer.Start();
+        _progressTimer.Start(); 
+//
     }
 
     private void OnProgressUpdate(object? sender, EventArgs e) {

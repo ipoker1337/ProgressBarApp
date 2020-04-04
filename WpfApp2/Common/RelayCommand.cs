@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows.Input;
 
 namespace WpfApp2.Common
@@ -39,7 +37,7 @@ namespace WpfApp2.Common
 
         public void Execute(object parameter) => _execute?.Invoke();
 
-        public bool CanExecute(object parameter) => _canExecute?.Invoke() ?? true;
+        public bool CanExecute(object? parameter = null) => _canExecute?.Invoke() ?? true;
         public void Refresh() => CommandManager.InvalidateRequerySuggested();
 
         public event EventHandler CanExecuteChanged {

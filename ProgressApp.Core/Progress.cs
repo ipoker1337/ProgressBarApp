@@ -30,13 +30,12 @@ ProgressHandler : IProgressHandler, IHasProgress {
         Progress = Progress.Create(value, targetValue, message);
 
     public void
-    Report(string message) =>
+    Report(string message) => 
         Progress = Progress?.WithMessage(message) ?? Progress.Create().WithMessage(message);
-
-    public void Reset() => Progress = null;
 
     public void
     Report(long deltaValue) {
+        // обязателен lock ?
         var p = Progress ?? Progress.Create();
         var rate = _rateEstimator.GetCurrentRate(deltaValue);
         var newValue = p.Value + deltaValue.VerifyNonNegative();
