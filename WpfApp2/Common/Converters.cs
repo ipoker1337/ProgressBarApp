@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
@@ -120,6 +120,17 @@ ProgressToIndeterminateConverter : IValueConverter {
         var progress = (Progress) value;
         return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
+
+    public object 
+    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
+public class
+NullToVisibilityConverter : IValueConverter {
+    public object 
+    Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
+        value == null ? Visibility.Collapsed : Visibility.Visible;
 
     public object 
     ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>

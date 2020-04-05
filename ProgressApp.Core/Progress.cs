@@ -22,6 +22,7 @@ IProgressHandler {
 public class
 ProgressHandler : IProgressHandler, IHasProgress {
     private readonly RateEstimator _rateEstimator = new RateEstimator();
+    private readonly object _thread = new object();
 
     public Progress? Progress { get; private set; }
 
@@ -35,7 +36,6 @@ ProgressHandler : IProgressHandler, IHasProgress {
 
     public void
     Report(long deltaValue) {
-        // обязателен lock ?
         var p = Progress ?? Progress.Create();
         var rate = _rateEstimator.GetCurrentRate(deltaValue);
         var newValue = p.Value + deltaValue.VerifyNonNegative();

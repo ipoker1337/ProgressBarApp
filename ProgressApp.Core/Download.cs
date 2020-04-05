@@ -12,22 +12,20 @@ public class
 DownloadResult {
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
-    public bool IsCanceled { get; }
     public Exception? Exception { get; }
     public long TotalBytesReceived { get; }
 
-    private DownloadResult(long totalBytesReceived, bool isSuccess, bool isCanceled, Exception? exception = null) { 
+    private DownloadResult(long totalBytesReceived, bool isSuccess, Exception? exception = null) { 
         TotalBytesReceived = totalBytesReceived.VerifyNonNegative();
         IsSuccess = isSuccess;
-        IsCanceled = isCanceled;
         Exception = exception;
     }
 
     public static DownloadResult 
-    Success(long totalBytesReceived) => new DownloadResult(totalBytesReceived, isSuccess: true, isCanceled: false);
+    Success(long totalBytesReceived) => new DownloadResult(totalBytesReceived, true);
 
     public static DownloadResult 
-    Failure(long totalBytesReceived, Exception? exception = null) => new DownloadResult(totalBytesReceived, isSuccess: false, isCanceled: false, exception);
+    Failure(long totalBytesReceived, Exception? exception = null) => new DownloadResult(totalBytesReceived, false, exception);
 }
 
 // under development
@@ -49,7 +47,7 @@ Download {
             request.Headers.Range = new RangeHeaderValue(position, contentLength);
             var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"The request returned {response.StatusCode}");
+                throw new HttpRequestException($"The request returned {response.StatusCode}");
 
             progress?.Report(position, contentLength, "Downloading...");
 
@@ -70,24 +68,21 @@ Download {
             }
         }
         catch (OperationCanceledException) {
-            progress?.Report("Canceled");
             return DownloadResult.Failure(position);
         }
         catch (Exception ex) {
-            progress?.Report($"Error: {ex.Message}" );
             return DownloadResult.Failure(position, ex);
         }
-        progress?.Report("Finished");
+
         return DownloadResult.Success(position);
+    }
 
-        static async Task<long?> 
-        GetContentLengthAsync(Uri requestUri, CancellationToken cancellationToken) {
-            var response = await HttpClient.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"The request returned {response.StatusCode}");
-
-            return response.Content.Headers.ContentLength;
-        }
+    private static async Task<long?> 
+    GetContentLengthAsync(Uri requestUri, CancellationToken cancellationToken) {
+        var response = await HttpClient.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"The request returned {response.StatusCode}");
+        return response.Content.Headers.ContentLength;
     }
 }
 
