@@ -12,6 +12,7 @@ public class
 DownloadResult {
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
+    public bool IsException => IsFailure && Exception != null;
     public Exception? Exception { get; }
     public long TotalBytesReceived { get; }
 
