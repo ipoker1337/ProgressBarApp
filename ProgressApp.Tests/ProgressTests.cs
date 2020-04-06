@@ -1,6 +1,8 @@
+using System;
 using System.Diagnostics;
 using NUnit.Framework;
 using ProgressApp.Core;
+using ProgressApp.Core.Common;
 
 namespace ProgressApp.Tests {
 
@@ -15,7 +17,6 @@ ProgressTest {
 
         var rateEstimator = new RateEstimator(10, now);
         Assert.AreEqual(0, rateEstimator.GetCurrentRate(0, now));
-
         Assert.AreEqual(50, rateEstimator.GetCurrentRate(50, now));
 
         now += TicksFromSeconds(0.8);
@@ -40,7 +41,7 @@ ProgressTest {
         Assert.AreEqual(0, rateEstimator.GetCurrentRate(0, now));
         Assert.AreEqual(100, rateEstimator.GetCurrentRate(100, now));
 
-        long TicksFromSeconds(double seconds) => (long)(Stopwatch.Frequency * seconds);
+        long TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds).Ticks;
     }
 
     [Test]

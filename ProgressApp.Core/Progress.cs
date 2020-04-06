@@ -173,7 +173,7 @@ RateEstimator {
             _oldestTime += TicksFromSeconds(1);
         }
 
-        long TicksFromSeconds(double seconds) => (long)(Stopwatch.Frequency * seconds);
+        long TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds).Ticks;
     }
 }
 #endregion
