@@ -9,9 +9,8 @@ IHasProgress {
     Progress? Progress { get; }
 }
 
-/// <summary>
-/// Интерфейс для отчетов о прогрессе. Ожидается, что интерфейс используется только из одного потока.
-/// </summary>
+// Интерфейс для отчетов о прогрессе.
+// Ожидается, что интерфейс используется только из одного потока.
 public interface 
 IProgressHandler {
     void Report(long value, long? targetValue, string message);

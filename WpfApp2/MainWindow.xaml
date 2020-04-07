@@ -60,8 +60,6 @@
                     Value="{Binding Value, Mode=OneWay}" />
             </Grid>
         </DataTemplate>
-
-
     </Window.Resources>
 
     <Border
@@ -98,6 +96,5 @@
             </StackPanel>
         </StackPanel>
     </Border>
-
 
 </Window>

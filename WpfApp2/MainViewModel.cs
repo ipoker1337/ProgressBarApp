@@ -16,7 +16,7 @@ MainViewModel : ViewModelBase, IDisposable {
     private bool _isPaused;
     private bool _isDownloading;
     private long _lastBytePosition;
-    private string _error = string.Empty;
+    private string? _error;
     private string _commandText = string.Empty;
     private RelayCommand _command = new RelayCommand();
 
@@ -28,7 +28,7 @@ MainViewModel : ViewModelBase, IDisposable {
 
     public ProgressViewModel DownloadProgress { get; }
 
-    public string Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
+    public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
     public string CommandText { get => _commandText; private set => SetPropertyIfChanged(ref _commandText, value); }
     public RelayCommand Command { get => _command; private set => SetPropertyIfChanged(ref _command, value); }
 
@@ -50,14 +50,13 @@ MainViewModel : ViewModelBase, IDisposable {
     // under development
     private async void 
     DownloadExecute() {
-        Error = string.Empty;
         if (_fileStream == Stream.Null)
             _fileStream = File.Create(_fileName);
 
         IsDownloading = true;
-        var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, _progressHandler, _lastBytePosition);
+        var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
+                                              _progressHandler, _lastBytePosition);
         IsDownloading = false;
-
         result.OnSuccess(Reset)
               .OnFailure(HandleException, x => x.Exception != null)
               .OnFailure(Pause, _ => _isPaused && _cancellationToken.IsCancellationRequested)
@@ -66,7 +65,7 @@ MainViewModel : ViewModelBase, IDisposable {
 
         void
         HandleException(Result value) {
-            Error = value.Exception?.Message ?? string.Empty;
+            Error = value.Exception?.Message;
             Reset();
         }
 
@@ -83,7 +82,7 @@ MainViewModel : ViewModelBase, IDisposable {
             _progressHandler.Report(0, 0);
             _lastBytePosition = 0;
             _isPaused = false;
-            IsDownloading = false;
+            CommandText = "Start";
         }
     }
 
