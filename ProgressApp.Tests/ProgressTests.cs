@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using NUnit.Framework;
 using ProgressApp.Core;
-using ProgressApp.Core.Common;
 
 namespace ProgressApp.Tests {
 
@@ -12,7 +11,6 @@ ProgressTest {
     [Test]
     public void 
     RateEstimatorTest() {
-        
         var now = Stopwatch.GetTimestamp();
 
         var rateEstimator = new RateEstimator(10, now);
