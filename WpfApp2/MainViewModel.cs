@@ -35,8 +35,15 @@ MainViewModel : ViewModelBase, IDisposable {
     public RelayCommand StartCommand => new RelayCommand(DownloadExecute, () => !IsDownloading);
     public RelayCommand PauseCommand => new RelayCommand(() => { _isPaused = true; _cancellationToken.Cancel();},
                                                          () => IsDownloading && !_cancellationToken.IsCancellationRequested);
-    public RelayCommand CancelCommand => new RelayCommand(() => { _isPaused = false; _cancellationToken.Cancel(); },
-                                                          () => _fileStream != Stream.Null && IsDownloading && !_cancellationToken.IsCancellationRequested);
+    public RelayCommand CancelCommand => new RelayCommand(Cancel, () => _fileStream != Stream.Null);
+
+    private void 
+    Cancel() {
+        _isPaused = false;
+        if (IsDownloading)
+            _cancellationToken.Cancel();
+        Reset();
+    }
 
     public bool IsDownloading {
         get => _isDownloading;
@@ -50,6 +57,7 @@ MainViewModel : ViewModelBase, IDisposable {
     // under development
     private async void 
     DownloadExecute() {
+        Error = null;
         if (_fileStream == Stream.Null)
             _fileStream = File.Create(_fileName);
 
@@ -60,7 +68,6 @@ MainViewModel : ViewModelBase, IDisposable {
         result.OnSuccess(Reset)
               .OnFailure(HandleException, x => x.Exception != null)
               .OnFailure(Pause, _ => _isPaused && _cancellationToken.IsCancellationRequested)
-              .OnFailure(Reset, _ => !_isPaused && _cancellationToken.IsCancellationRequested)
               .OnBoth(_ => { _cancellationToken = new CancellationTokenSource(); Command.Refresh(); });
 
         void
@@ -74,16 +81,16 @@ MainViewModel : ViewModelBase, IDisposable {
             _lastBytePosition = value.BytesReceived;
             _progressHandler.Report("Paused");
         }
+    }
 
-        void
-        Reset() {
-            _fileStream.Close();
-            _fileStream = Stream.Null;
-            _progressHandler.Report(0, 0);
-            _lastBytePosition = 0;
-            _isPaused = false;
-            CommandText = "Start";
-        }
+    private void
+    Reset() {
+        _fileStream.Close();
+        _fileStream = Stream.Null;
+        _progressHandler.Report(0, 0);
+        _lastBytePosition = 0;
+        _isPaused = false;
+        CommandText = "Start";
     }
 
     public void
