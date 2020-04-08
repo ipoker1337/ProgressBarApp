@@ -18,50 +18,16 @@ MainViewModel : ViewModelBase, IDisposable {
     private string _commandText = string.Empty;
     private RelayCommand _command = new RelayCommand();
 
-    public State CurrentState { get; private set; }
-
-    public enum State { Idle, Active, Paused }
-    public enum Trigger { Start, Pause, Cancel }
-
-    public State 
-    TransitionTo(Trigger trigger) =>
-    (CurrentState, trigger) switch {
-        (State.Idle, Trigger.Start) => ((Func<State>)(() => {
-            Error = null;
-            CommandText = "Pause";
-            Command = PauseCommand;
-            DownloadExecute();
-            return CurrentState = State.Active;
-        }))(),
-        (State.Active, Trigger.Cancel) => ((Func<State>)(() => {
-            _cancellationToken.Cancel();
-            Reset();
-            return CurrentState = State.Idle;
-        }))(),
-        (State.Active, Trigger.Pause) => ((Func<State>)(() => {
-            _cancellationToken.Cancel();
-            CommandText = "Resume";
-            Command = StartCommand;
-            return CurrentState = State.Paused;
-        }))(),
-        (State.Paused, Trigger.Cancel) => ((Func<State>)(() => {
-            Reset();
-            return CurrentState = State.Idle;
-        }))(),
-        (State.Paused, Trigger.Start) => ((Func<State>)(() => {
-            CommandText = "Pause";
-            Command = PauseCommand;
-            DownloadExecute();
-            return CurrentState = State.Active;
-        }))(),
-        _ => throw new NotSupportedException($"{CurrentState} has no transition on {trigger}")
-    };
-
     public MainViewModel() {
         DownloadProgress = new ProgressViewModel(_progressHandler);
         CurrentState = State.Idle;
         Reset();
     }
+
+    public enum State { Idle, Running, Paused }
+    private enum Trigger { Start, Pause, Cancel, End }
+
+    public State CurrentState { get; private set; }
 
     public ProgressViewModel DownloadProgress { get; }
 
@@ -69,9 +35,9 @@ MainViewModel : ViewModelBase, IDisposable {
     public string CommandText { get => _commandText; private set => SetPropertyIfChanged(ref _commandText, value); }
     public RelayCommand Command { get => _command; private set => SetPropertyIfChanged(ref _command, value); }
 
-    public RelayCommand StartCommand => new RelayCommand(() => TransitionTo(Trigger.Start), () => CurrentState != State.Active);
-    public RelayCommand CancelCommand => new RelayCommand(() => TransitionTo(Trigger.Cancel), () => CurrentState != State.Idle);
-    public RelayCommand PauseCommand => new RelayCommand(() => TransitionTo(Trigger.Pause), () =>  CurrentState == State.Active);
+    public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState != State.Running);
+    public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => CurrentState != State.Idle);
+    public RelayCommand PauseCommand => new RelayCommand(() => Fire(Trigger.Pause), () =>  CurrentState == State.Running);
 
     // under development
     private async void 
@@ -82,7 +48,7 @@ MainViewModel : ViewModelBase, IDisposable {
         var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
                                               _progressHandler, _lastBytePosition);
 
-        result.OnSuccess(Reset)
+        result.OnSuccess(() => Fire(Trigger.End))
               .OnFailure(HandleException, x => x.Exception != null)
               .OnFailure(Pause, _ => CurrentState == State.Paused)
               .OnBoth(_ => { _cancellationToken = new CancellationTokenSource(); Command.Refresh(); });
@@ -90,7 +56,7 @@ MainViewModel : ViewModelBase, IDisposable {
         void
         HandleException(Result value) {
             Error = value.Exception?.Message;
-            Reset();
+            Fire(Trigger.Cancel);
         }
 
         void
@@ -108,6 +74,49 @@ MainViewModel : ViewModelBase, IDisposable {
         _lastBytePosition = 0;
         CommandText = "Start";
         Command = StartCommand;
+    }
+
+    private void
+    Fire(Trigger trigger) {
+        CurrentState = TransitionTo(CurrentState, trigger);
+
+        State
+        TransitionTo(State state, Trigger value) =>
+        (state: state, trigger: value) switch {
+        (State.Idle, Trigger.Start) => ((Func<State>) (() => {
+            Error = null;
+            CommandText = "Pause";
+            Command = PauseCommand;
+            DownloadExecute();
+            return State.Running;
+        }))(),
+        (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
+            _cancellationToken.Cancel();
+            Reset();
+            return State.Idle;
+        }))(),
+        (State.Running, Trigger.Pause) => ((Func<State>) (() => {
+            _cancellationToken.Cancel();
+            CommandText = "Resume";
+            Command = StartCommand;
+            return State.Paused;
+        }))(),
+        (State.Running, Trigger.End) => ((Func<State>) (() => {
+            Reset();
+            return State.Idle;
+        }))(),
+        (State.Paused, Trigger.Cancel) => ((Func<State>) (() => {
+            Reset();
+            return State.Idle;
+        }))(),
+        (State.Paused, Trigger.Start) => ((Func<State>) (() => {
+            CommandText = "Pause";
+            Command = PauseCommand;
+            DownloadExecute();
+            return State.Running;
+        }))(),
+        _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
+        };
     }
 
     public void

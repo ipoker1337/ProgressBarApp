@@ -16,7 +16,6 @@ IProgressHandler {
     void Report(long value, long? targetValue, string message);
     void Report(long deltaValue);
     void Report(string message);
-    void Reset();
 }
 
 public class
