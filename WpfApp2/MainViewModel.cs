@@ -104,7 +104,7 @@ MainViewModel : ViewModelBase, IDisposable {
     Reset() {
         _fileStream.Close();
         _fileStream = Stream.Null;
-        _progressHandler.Report(0, 0);
+        _progressHandler.Reset();
         _lastBytePosition = 0;
         CommandText = "Start";
         Command = StartCommand;

@@ -16,6 +16,7 @@ IProgressHandler {
     void Report(long value, long? targetValue, string message);
     void Report(long deltaValue);
     void Report(string message);
+    void Reset();
 }
 
 public class
@@ -43,6 +44,9 @@ ProgressHandler : IProgressHandler, IHasProgress {
             timeLeft = (p.TargetValue.Value - newValue) / rate;
         Progress = p.Update(newValue, rate, timeLeft.Seconds());
     }
+
+    public void 
+    Reset() => Progress = null;
 }
 
 public class
