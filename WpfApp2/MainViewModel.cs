@@ -13,17 +13,54 @@ MainViewModel : ViewModelBase, IDisposable {
     private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
     private Stream _fileStream = Stream.Null;
     
-    private bool _isPaused;
-    private bool _isDownloading;
     private long _lastBytePosition;
     private string? _error;
     private string _commandText = string.Empty;
     private RelayCommand _command = new RelayCommand();
 
+    public State CurrentState { get; private set; }
+
+    public enum State { Idle, Active, Paused }
+    public enum Trigger { Start, Pause, Cancel }
+
+    public State 
+    TransitionTo(Trigger trigger) =>
+    (CurrentState, trigger) switch {
+        (State.Idle, Trigger.Start) => ((Func<State>)(() => {
+            Error = null;
+            CommandText = "Pause";
+            Command = PauseCommand;
+            DownloadExecute();
+            return CurrentState = State.Active;
+        }))(),
+        (State.Active, Trigger.Cancel) => ((Func<State>)(() => {
+            _cancellationToken.Cancel();
+            Reset();
+            return CurrentState = State.Idle;
+        }))(),
+        (State.Active, Trigger.Pause) => ((Func<State>)(() => {
+            _cancellationToken.Cancel();
+            CommandText = "Resume";
+            Command = StartCommand;
+            return CurrentState = State.Paused;
+        }))(),
+        (State.Paused, Trigger.Cancel) => ((Func<State>)(() => {
+            Reset();
+            return CurrentState = State.Idle;
+        }))(),
+        (State.Paused, Trigger.Start) => ((Func<State>)(() => {
+            CommandText = "Pause";
+            Command = PauseCommand;
+            DownloadExecute();
+            return CurrentState = State.Active;
+        }))(),
+        _ => throw new NotSupportedException($"{CurrentState} has no transition on {trigger}")
+    };
+
     public MainViewModel() {
         DownloadProgress = new ProgressViewModel(_progressHandler);
-        IsDownloading = false;
-        Command = StartCommand;
+        CurrentState = State.Idle;
+        Reset();
     }
 
     public ProgressViewModel DownloadProgress { get; }
@@ -32,42 +69,22 @@ MainViewModel : ViewModelBase, IDisposable {
     public string CommandText { get => _commandText; private set => SetPropertyIfChanged(ref _commandText, value); }
     public RelayCommand Command { get => _command; private set => SetPropertyIfChanged(ref _command, value); }
 
-    public RelayCommand StartCommand => new RelayCommand(DownloadExecute, () => !IsDownloading);
-    public RelayCommand PauseCommand => new RelayCommand(() => { _isPaused = true; _cancellationToken.Cancel();},
-                                                         () => IsDownloading && !_cancellationToken.IsCancellationRequested);
-    public RelayCommand CancelCommand => new RelayCommand(Cancel, () => _fileStream != Stream.Null);
-
-    private void 
-    Cancel() {
-        _isPaused = false;
-        if (IsDownloading)
-            _cancellationToken.Cancel();
-        Reset();
-    }
-
-    public bool IsDownloading {
-        get => _isDownloading;
-        private set {
-            CommandText = value ? "Pause" : (_isPaused ? "Resume" : "Start");
-            Command = value ? PauseCommand : StartCommand;
-            SetPropertyIfChanged(ref _isDownloading, value);
-        }
-    }
+    public RelayCommand StartCommand => new RelayCommand(() => TransitionTo(Trigger.Start), () => CurrentState != State.Active);
+    public RelayCommand CancelCommand => new RelayCommand(() => TransitionTo(Trigger.Cancel), () => CurrentState != State.Idle);
+    public RelayCommand PauseCommand => new RelayCommand(() => TransitionTo(Trigger.Pause), () =>  CurrentState == State.Active);
 
     // under development
     private async void 
     DownloadExecute() {
-        Error = null;
         if (_fileStream == Stream.Null)
             _fileStream = File.Create(_fileName);
 
-        IsDownloading = true;
         var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
                                               _progressHandler, _lastBytePosition);
-        IsDownloading = false;
+
         result.OnSuccess(Reset)
               .OnFailure(HandleException, x => x.Exception != null)
-              .OnFailure(Pause, _ => _isPaused && _cancellationToken.IsCancellationRequested)
+              .OnFailure(Pause, _ => CurrentState == State.Paused)
               .OnBoth(_ => { _cancellationToken = new CancellationTokenSource(); Command.Refresh(); });
 
         void
@@ -89,8 +106,8 @@ MainViewModel : ViewModelBase, IDisposable {
         _fileStream = Stream.Null;
         _progressHandler.Report(0, 0);
         _lastBytePosition = 0;
-        _isPaused = false;
         CommandText = "Start";
+        Command = StartCommand;
     }
 
     public void
