@@ -95,12 +95,10 @@ ProgressToTextConverter : IValueConverter {
             return string.Empty;
         var now = DateTime.Now;
         var elapsed = now - _lastUpdate;
-        var canUpdate = UpdateThresholdMs <= elapsed.TotalMilliseconds;
-        if (canUpdate) {
-            _lastUpdate = now;
-            return ProgressToText((Progress) value);
-        }
-        return Binding.DoNothing;
+        if (UpdateThresholdMs > elapsed.TotalMilliseconds)
+            return Binding.DoNothing;
+        _lastUpdate = now;
+        return ProgressToText((Progress) value);
 
         static string 
         ProgressToText(Progress progress) {
