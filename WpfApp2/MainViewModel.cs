@@ -6,6 +6,7 @@ using WpfApp2.Common;
 
 namespace WpfApp2 {
 
+// under development
 public class
 StateMachine<TState, TTrigger> {
 
@@ -58,9 +59,7 @@ MainViewModel : ViewModelBase, IDisposable {
     // under development
     private async void 
     DownloadExecute() {
-        if (_fileStream == Stream.Null)
-            _fileStream = File.Create(_fileName);
-
+        _fileStream = (_fileStream == Stream.Null) ? File.Create(_fileName) : _fileStream;
         var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
                                               _progressHandler, _lastBytePosition);
 
@@ -91,6 +90,7 @@ MainViewModel : ViewModelBase, IDisposable {
         _lastBytePosition = 0;
         CommandText = "Start";
         Command = StartCommand;
+        Command.Refresh();
     }
 
     private void
@@ -135,7 +135,7 @@ MainViewModel : ViewModelBase, IDisposable {
         _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
         };
     }
-
+//
     public void
     Dispose() {
         _cancellationToken.Dispose();
