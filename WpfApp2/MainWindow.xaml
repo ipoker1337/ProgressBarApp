@@ -2,7 +2,6 @@
     x:Class="WpfApp2.ViewModels.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:common="clr-namespace:WpfApp2.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wpfApp2="clr-namespace:WpfApp2"
@@ -13,54 +12,6 @@
     Background="{DynamicResource WindowBackgroundBrush}"
     Foreground="{DynamicResource WindowForegroundBrush}"
     mc:Ignorable="d">
-
-    <Window.Resources>
-        <common:ProgressToStringConverter x:Key="ProgressToStringConverter" />
-        <common:ProgressToIndeterminateConverter x:Key="ProgressToIndeterminateConverter" />
-        <common:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
-        <!--  ProgressBar DataTemplate  -->
-        <DataTemplate DataType="{x:Type wpfApp2:ProgressViewModel}">
-            <DataTemplate.Resources>
-                <Style TargetType="TextBlock">
-                    <Setter Property="FontSize" Value="13" />
-                </Style>
-            </DataTemplate.Resources>
-            <Grid
-                Width="Auto"
-                Height="Auto"
-                HorizontalAlignment="Stretch"
-                Opacity="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="4" />
-                </Grid.RowDefinitions>
-                <TextBlock
-                    Grid.Row="0"
-                    Margin="0"
-                    HorizontalAlignment="Left"
-                    FontSize="14"
-                    FontWeight="DemiBold"
-                    Foreground="{DynamicResource ProgressBarHighligthBrush}"
-                    Text="{Binding Text}"
-                    TextWrapping="Wrap" />
-                <TextBlock
-                    Grid.Row="1"
-                    Margin="0,12,0,16"
-                    HorizontalAlignment="Left"
-                    Foreground="{DynamicResource ProgressBarTextBrush}"
-                    Text="{Binding Progress, Converter={StaticResource ProgressToStringConverter}}" />
-                <ProgressBar
-                    Grid.Row="2"
-                    IsIndeterminate="{Binding Progress, Converter={StaticResource ProgressToIndeterminateConverter}}"
-                    Maximum="{Binding TargetValue}"
-                    Style="{StaticResource LinearProgressBarStyle}"
-                    Value="{Binding Value, Mode=OneWay}" />
-            </Grid>
-        </DataTemplate>
-    </Window.Resources>
 
     <Border
         Margin="10"

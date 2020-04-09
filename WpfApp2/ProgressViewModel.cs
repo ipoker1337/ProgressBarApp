@@ -7,39 +7,23 @@ namespace WpfApp2 {
 
 public class 
 ProgressViewModel : ViewModelBase, IDisposable {
-    private readonly IHasProgress _progress;
-    private readonly DispatcherTimer _textTimer;
-    private readonly DispatcherTimer _progressTimer;
+    private readonly IHasProgress _provider;
+    private readonly DispatcherTimer _timer;
 
-    public ProgressViewModel(IHasProgress progress) {
-        _progress = progress;
-
-// Under development
-            _textTimer = new DispatcherTimer();
-            _textTimer.Interval = 500.Milliseconds();
-            _textTimer.Tick += OnTextUpdate;
-            _textTimer.Start();
-
-        _progressTimer = new DispatcherTimer();
-        _progressTimer.Interval = 100.Milliseconds();
-        _progressTimer.Tick += OnProgressUpdate;
-        _progressTimer.Start(); 
-//
+    public ProgressViewModel(IHasProgress provider, int refreshRateMs = 50) {
+        _provider = provider;
+        _timer = new DispatcherTimer();
+        _timer.Interval = refreshRateMs.Milliseconds().VerifyGreaterZero();
+        _timer.Tick += OnProgressUpdate;
+        _timer.Start();
     }
 
     private void OnProgressUpdate(object? sender, EventArgs e) {
-        TargetValue = _progress.Progress?.TargetValue ?? 0;
-        Text = _progress.Progress?.Message;
-        Value = _progress.Progress?.Value ?? 0;
-        //Progress = _progressProvider.Progress;
+        TargetValue = _provider.Progress?.TargetValue ?? 0;
+        Value = _provider.Progress?.Value ?? 0;
+        Caption = _provider.Progress?.Message ?? string.Empty;
+        Progress = _provider.Progress;
     }
-
-
-    private void OnTextUpdate(object? sender, EventArgs e) {
-        Progress = _progress.Progress;
-    }
-
-    #region Properties
 
     private long _value;
     public long Value {
@@ -53,24 +37,20 @@ ProgressViewModel : ViewModelBase, IDisposable {
         private set => SetPropertyIfChanged(ref _targetValue, value);
     }
 
-    private Progress? _progressProperty;
+    private Progress? _progress;
     public Progress? Progress {
-        get => _progressProperty;
-        set => SetPropertyIfChanged(ref _progressProperty, value);
+        get => _progress;
+        set => SetPropertyIfChanged(ref _progress, value);
     }
 
-    private string? _text = string.Empty;
-    public string? Text {
-        get => _text;
-        set => SetPropertyIfChanged(ref _text, value);
+    private string _caption = string.Empty;
+    public string Caption {
+        get => _caption;
+        set => SetPropertyIfChanged(ref _caption, value);
     }
-
-    #endregion
 
     public void 
-    Dispose() {
-        _progressTimer.Tick -= OnProgressUpdate;
-        _textTimer.Tick -= OnTextUpdate;
-    }
+    Dispose() => _timer.Tick -= OnProgressUpdate;
+    
 }
 }

@@ -7,10 +7,8 @@ using ProgressApp.Core.Common;
 
 namespace WpfApp2.Common {
 
-    // 288 КБ/с - 3,8 МБ из 58,6 МБ, Осталось 3 мин.
-    // 4.9 MB/s - 24.7 MB of 58.6 MB, 6 secs left
-
 #region under development
+
 public struct 
 ByteConverter {
     public const long BytesInKilobyte = 1024;
@@ -77,31 +75,45 @@ Long {
     public static ByteConverter 
         FromBytes(this long value) => new ByteConverter((double)value);
 }
+
 #endregion
 
+
 public class 
-ProgressToStringConverter : IValueConverter {
+ProgressToTextConverter : IValueConverter {
+    private DateTime _lastUpdate = DateTime.MinValue;
+
+    private int _updateThresholdMs;
+    public int UpdateThresholdMs {
+        get => _updateThresholdMs;
+        set => _updateThresholdMs = value.VerifyNonNegative();
+    }
+
     public object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return string.Empty;
-        if (!(value is Progress))
-            throw new InvalidOperationException("The values[0] must be Progress");
+        var now = DateTime.Now;
+        var elapsed = now - _lastUpdate;
+        var canUpdate = UpdateThresholdMs <= elapsed.TotalMilliseconds;
+        if (canUpdate) {
+            _lastUpdate = now;
+            return ProgressToText((Progress) value);
+        }
+        return Binding.DoNothing;
 
-        var p = (Progress) value;
-        if (p.Value == 0)
-            return string.Empty;
+        static string 
+        ProgressToText(Progress progress) {
+            var rate = progress.Rate.FromBytes().ToReadable();
+            if (!progress.TargetValue.HasValue || progress.TargetValue < progress.Value)
+                return $"{rate}/s - {progress.Value.FromBytes().ToReadable()}";
 
-        var rate = p.Rate.FromBytes().ToReadable();
-
-        if (!p.TargetValue.HasValue || p.TargetValue < p.Value)
-            return $"{rate}/s - {p.Value.FromBytes().ToReadable()}";
-
-        var targetValue = p.TargetValue?.FromBytes().ToReadable();
-        var unit = p.TargetValue?.FromBytes().LargestUnit;
-        var currentValue = p.Value.FromBytes().ToReadable(unit ?? ByteConverter.Unit.Bytes);
-
-        return $"{rate}/s - {currentValue} of {targetValue}, {p.TimeLeft.ToReadable()} left";
+            var targetValue = progress.TargetValue?.FromBytes().ToReadable();
+            var unit = progress.TargetValue?.FromBytes().LargestUnit;
+            var currentValue = progress.Value.FromBytes().ToReadable(unit ?? ByteConverter.Unit.Bytes);
+            // 4.9 MB/s - 24.7 MB of 58.6 MB, 6 secs left
+            return $"{rate}/s - {currentValue} of {targetValue}, {progress.TimeLeft.ToReadable()} left";
+        }
     }
 
     public object 
@@ -115,8 +127,6 @@ ProgressToIndeterminateConverter : IValueConverter {
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return false;
-        if (!(value is Progress))
-            throw new InvalidOperationException("The target must be Progress");
         var progress = (Progress) value;
         return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
@@ -136,5 +146,6 @@ NullToVisibilityConverter : IValueConverter {
     ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         throw new NotImplementedException();
 }
+
 }
 

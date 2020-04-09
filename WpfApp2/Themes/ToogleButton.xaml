@@ -20,7 +20,7 @@
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="Background" Value="{DynamicResource ProgressBarBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ProgressBarBorderBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource ProgressBarHighligthBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ProgressBarHighlightBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />

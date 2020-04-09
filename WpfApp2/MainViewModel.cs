@@ -6,6 +6,22 @@ using WpfApp2.Common;
 
 namespace WpfApp2 {
 
+public class
+StateMachine<TState, TTrigger> {
+
+    public class 
+    Transition {
+        private Action? _action;
+        public TState Original { get; }
+        public TState Destination { get; }
+        public TTrigger Trigger { get; }
+
+        public Transition(TState original, TState destination, TTrigger trigger, Action? action = null) =>
+            (Original, Destination, Trigger, _action) = (original, destination, trigger, action);
+    }
+
+}
+
 public class 
 MainViewModel : ViewModelBase, IDisposable {
     private const string _fileName = "test.zip";
@@ -71,6 +87,7 @@ MainViewModel : ViewModelBase, IDisposable {
         _fileStream.Close();
         _fileStream = Stream.Null;
         _progressHandler.Reset();
+        DownloadProgress.Progress = null;
         _lastBytePosition = 0;
         CommandText = "Start";
         Command = StartCommand;
