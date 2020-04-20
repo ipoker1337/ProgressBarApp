@@ -59,10 +59,16 @@ MainViewModel : ViewModelBase, IDisposable {
     // under development
     private async void 
     DownloadExecute() {
+        //Andrew:
+        //using var fileStream = File.Open(_fileName);
+        //fileStream.Seek(0, SeekOrigin.End);
+        //Файл будет создан, если не существует. Обычно вот так ссылку на стрим не хранят, как у тебя.
+        //Стримы сразу Dispose'ят после завершения операции
         _fileStream = (_fileStream == Stream.Null) ? File.Create(_fileName) : _fileStream;
         var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
                                               _progressHandler, _lastBytePosition);
-
+        //Andrew: Красиво, но так не делают :), т.к. слишком сложно. Просто трай кетч ставят и все. В Download.FileAsync
+        //не должно быть обработок ошибок. try/catch ставят обычно как можно выше по иерархии классов
         result.OnSuccess(() => Fire(Trigger.End))
               .OnFailure(HandleException, x => x.Exception != null)
               .OnFailure(Pause, _ => CurrentState == State.Paused)
@@ -93,6 +99,11 @@ MainViewModel : ViewModelBase, IDisposable {
         Command.Refresh();
     }
 
+    //Andrew: тут слишком сложно получилось.
+    //Текст кнопок это почти всегда уходит в XAML. 
+    //Если текст кнопок у тебя во ViewModel значит ты что-то делаешь не так.
+    //В этой задаче нужно просто создать 3 разных кнопок в XAML: Start, Pause, Resume.
+    //Каждая кнопка должна будет иметь Visibility==Collapsed если CanExecute == false
     private void
     Fire(Trigger trigger) {
         CurrentState = TransitionTo(CurrentState, trigger);

@@ -11,6 +11,8 @@ IHasProgress {
 
 // Интерфейс для отчетов о прогрессе.
 // Ожидается, что интерфейс используется только из одного потока.
+//Andrew: это называется thread unsafe. Обычно это не указывают, если не пишут API, т.к. и так понятно
+//В х2н я обычно использую ..Observer суффикс. IProgressObserver. А методы в нем начинаются с префикса On: OnProgress.
 public interface 
 IProgressHandler {
     void Report(long value, long? targetValue, string message);
@@ -96,11 +98,15 @@ Progress {
 #region under development
 // Есть подоздрение, что это не functional first стиль :) 
 // ringbuffer, в конструкторе принимает интервал в секундах за который считается средняя скорость
+//Andrew: Да, тут ООП стиль, и как следствие overcomplicated получилось.
 public sealed class 
 RateEstimator {
+    //Andrew: лучше избегать идентификаторов с названием в виде типа
     private readonly long[] _array;
     private int _oldestIndex;
     private int _intervalCount;
+
+    //Andrew: TimeStamp должен быть в виде DateTime
     private long _oldestTime;
 
     public RateEstimator(int timeIntervalSeconds = 10) 
