@@ -6,7 +6,7 @@ using ProgressApp.Core.Common;
 namespace WpfApp2 {
 
 public class 
-ProgressViewModel : ViewModelBase, IDisposable {
+ProgressViewModel : ViewModel, IDisposable {
     private readonly IHasProgress _provider;
     private readonly DispatcherTimer _timer;
 

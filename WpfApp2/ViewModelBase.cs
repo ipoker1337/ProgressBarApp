@@ -4,7 +4,8 @@ using System.Runtime.CompilerServices;
 
 namespace WpfApp2 {
 
-public class ViewModelBase : INotifyPropertyChanged {
+public class 
+ViewModel : INotifyPropertyChanged {
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void 

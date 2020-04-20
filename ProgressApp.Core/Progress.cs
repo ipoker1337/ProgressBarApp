@@ -9,35 +9,33 @@ IHasProgress {
     Progress? Progress { get; }
 }
 
-// Интерфейс для отчетов о прогрессе.
-// Ожидается, что интерфейс используется только из одного потока.
 public interface 
-IProgressHandler {
-    void Report(long value, long? targetValue, string message);
-    void Report(long deltaValue);
-    void Report(string message);
+IProgressObserver {
+    void OnProgress(long value, long? targetValue, string message);
+    void OnProgress(long deltaValue);
+    void OnProgress(string message);
 }
 
 public class
-ProgressHandler : IProgressHandler, IHasProgress {
+ProgressObserver : IProgressObserver, IHasProgress {
     private readonly RateEstimator _rateEstimator = new RateEstimator();
-    private readonly object _thread = new object();
 
     public Progress? Progress { get; private set; }
 
     public void
-    Report(long value, long? targetValue, string message = "") =>
+    OnProgress(long value, long? targetValue, string message = "") =>
         Progress = Progress.Create(value, targetValue, message);
 
     public void
-    Report(string message) => 
+    OnProgress(string message) => 
         Progress = Progress?.WithMessage(message) ?? Progress.Create().WithMessage(message);
 
     public void
-    Report(long deltaValue) {
+    OnProgress(long deltaValue) {
+        deltaValue.VerifyNonNegative();
         var p = Progress ?? Progress.Create();
         var rate = _rateEstimator.GetCurrentRate(deltaValue);
-        var newValue = p.Value + deltaValue.VerifyNonNegative();
+        var newValue = p.Value + deltaValue;
         long timeLeft = 0;
         if (p.TargetValue != null && p.TargetValue.Value > newValue && rate > 0)
             timeLeft = (p.TargetValue.Value - newValue) / rate;
@@ -93,14 +91,13 @@ Progress {
     ToString() => $"{Message}: {Rate} B/s - {Value} of {TargetValue}, {TimeLeft.ToReadable()} left";
 }
 
-#region under development
-// Есть подоздрение, что это не functional first стиль :) 
 // ringbuffer, в конструкторе принимает интервал в секундах за который считается средняя скорость
 public sealed class 
 RateEstimator {
-    private readonly long[] _array;
+    private readonly long[] _rateArray;
     private int _oldestIndex;
     private int _intervalCount;
+    //TODO: TimeStamp должен быть в виде DateTime
     private long _oldestTime;
 
     public RateEstimator(int timeIntervalSeconds = 10) 
@@ -108,7 +105,7 @@ RateEstimator {
 
     public RateEstimator(int timeIntervalSeconds, long timeStamp) {
         timeIntervalSeconds.VerifyNonNegative();
-        _array = new long[timeIntervalSeconds];
+        _rateArray = new long[timeIntervalSeconds];
         Reset(timeStamp);
     }
 
@@ -124,16 +121,16 @@ RateEstimator {
         void
         Increment(long deltaValue, long timeStamp) {
             var secondsSinceOldest = new TimeSpan(timeStamp - _oldestTime).Seconds;
-            var currentIndex = (_oldestIndex + secondsSinceOldest) % _array.Length;
-            _array[currentIndex] += deltaValue;
+            var currentIndex = (_oldestIndex + secondsSinceOldest) % _rateArray.Length;
+            _rateArray[currentIndex] += deltaValue;
         }
 
         long
         CalculateRate() {
             long total = 0;
             for (var i = 0; i < _intervalCount; i++) {
-                var index = (_oldestIndex + i) % _array.Length;
-                total += _array[index];
+                var index = (_oldestIndex + i) % _rateArray.Length;
+                total += _rateArray[index];
             }
             return total / _intervalCount;
         }
@@ -141,8 +138,8 @@ RateEstimator {
 
     private void 
     Reset(long timestamp) {
-        for (var i=0; i < _array.Length; i++) {
-            _array[i] = 0;
+        for (var i=0; i < _rateArray.Length; i++) {
+            _rateArray[i] = 0;
         }
         _oldestIndex = 0;
         _intervalCount = 1;
@@ -157,27 +154,25 @@ RateEstimator {
             return;
         }
         var index = secondsSinceOldest;
-        if (index < _array.Length) {
+        if (index < _rateArray.Length) {
             _intervalCount = index + 1;
             return;
         }
 
-        var extraIntervals = index - _array.Length + 1;
-        if (extraIntervals > _array.Length) {
+        var extraIntervals = index - _rateArray.Length + 1;
+        if (extraIntervals > _rateArray.Length) {
             Reset(timestamp);
             return;
         }
 
-        _intervalCount = _array.Length;
+        _intervalCount = _rateArray.Length;
         for (var i = 0; i < extraIntervals; i++) {
-            _array[_oldestIndex] = 0;
-            _oldestIndex = (_oldestIndex + 1) % _array.Length;
+            _rateArray[_oldestIndex] = 0;
+            _oldestIndex = (_oldestIndex + 1) % _rateArray.Length;
             _oldestTime += TicksFromSeconds(1);
         }
 
         long TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds).Ticks;
     }
 }
-#endregion
-
 }

@@ -7,26 +7,39 @@ using WpfApp2.Common;
 namespace WpfApp2 {
 
 // under development
+
+public class 
+DownloadContext {
+    public Uri RequestUri { get; }
+    public string FileName { get; }
+    public string Directory { get; }
+    public ILogger Logger { get; }
+    public ProgressObserver ProgressObserver { get; } = new ProgressObserver();
+    public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
+
+    public DownloadContext(Uri requestUri, string filename, string directory, ILogger? logger = null) =>
+        (RequestUri, FileName, Directory, Logger) = (requestUri, filename, directory, logger ?? DefaultLogger.Null);
+}
+
 public class
-StateMachine<TState, TTrigger> {
-
-    public class 
-    Transition {
-        private Action? _action;
-        public TState Original { get; }
-        public TState Destination { get; }
-        public TTrigger Trigger { get; }
-
-        public Transition(TState original, TState destination, TTrigger trigger, Action? action = null) =>
-            (Original, Destination, Trigger, _action) = (original, destination, trigger, action);
+DownloadViewModel {
+    public DownloadViewModel(DownloadContext ctx) {
+        DownloadProgress = new ProgressViewModel(ctx.ProgressObserver);
+        CurrentState = State.Idle;
     }
 
+    public enum State { Idle, Running, Paused }
+    private enum Trigger { Start, Pause, Cancel, End }
+
+    public State CurrentState { get; private set; }
+
+    public ProgressViewModel DownloadProgress { get; }
 }
 
 public class 
-MainViewModel : ViewModelBase, IDisposable {
+MainViewModel : ViewModel, IDisposable {
     private const string _fileName = "test.zip";
-    private readonly ProgressHandler _progressHandler = new ProgressHandler();
+    private readonly ProgressObserver _progressObserver = new ProgressObserver();
     private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
     private Stream _fileStream = Stream.Null;
     
@@ -36,7 +49,7 @@ MainViewModel : ViewModelBase, IDisposable {
     private RelayCommand _command = new RelayCommand();
 
     public MainViewModel() {
-        DownloadProgress = new ProgressViewModel(_progressHandler);
+        DownloadProgress = new ProgressViewModel(_progressObserver);
         CurrentState = State.Idle;
         Reset();
     }
@@ -61,7 +74,7 @@ MainViewModel : ViewModelBase, IDisposable {
     DownloadExecute() {
         _fileStream = (_fileStream == Stream.Null) ? File.Create(_fileName) : _fileStream;
         var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
-                                              _progressHandler, _lastBytePosition);
+                                              _progressObserver, _lastBytePosition);
 
         result.OnSuccess(() => Fire(Trigger.End))
               .OnFailure(HandleException, x => x.Exception != null)
@@ -77,7 +90,7 @@ MainViewModel : ViewModelBase, IDisposable {
         void
         Pause(Result value) {
             _lastBytePosition = value.BytesReceived;
-            _progressHandler.Report("Paused");
+            _progressObserver.OnProgress("Paused");
         }
     }
 
@@ -85,7 +98,7 @@ MainViewModel : ViewModelBase, IDisposable {
     Reset() {
         _fileStream.Close();
         _fileStream = Stream.Null;
-        _progressHandler.Reset();
+        _progressObserver.Reset();
         DownloadProgress.Progress = null;
         _lastBytePosition = 0;
         CommandText = "Start";
@@ -99,43 +112,43 @@ MainViewModel : ViewModelBase, IDisposable {
 
         State
         TransitionTo(State state, Trigger value) =>
-        (state: state, trigger: value) switch {
-        (State.Idle, Trigger.Start) => ((Func<State>) (() => {
-            Error = null;
-            CommandText = "Pause";
-            Command = PauseCommand;
-            DownloadExecute();
-            return State.Running;
-        }))(),
-        (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
-            _cancellationToken.Cancel();
-            Reset();
-            return State.Idle;
-        }))(),
-        (State.Running, Trigger.Pause) => ((Func<State>) (() => {
-            _cancellationToken.Cancel();
-            CommandText = "Resume";
-            Command = StartCommand;
-            return State.Paused;
-        }))(),
-        (State.Running, Trigger.End) => ((Func<State>) (() => {
-            Reset();
-            return State.Idle;
-        }))(),
-        (State.Paused, Trigger.Cancel) => ((Func<State>) (() => {
-            Reset();
-            return State.Idle;
-        }))(),
-        (State.Paused, Trigger.Start) => ((Func<State>) (() => {
-            CommandText = "Pause";
-            Command = PauseCommand;
-            DownloadExecute();
-            return State.Running;
-        }))(),
-        _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
-        };
+            (state, trigger: value) switch {
+                (State.Idle, Trigger.Start) => ((Func<State>) (() => {
+                    Error = null;
+                    CommandText = "Pause";
+                    Command = PauseCommand;
+                    DownloadExecute();
+                    return State.Running;
+                }))(),
+                (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
+                    _cancellationToken.Cancel();
+                    Reset();
+                    return State.Idle;
+                }))(),
+                (State.Running, Trigger.Pause) => ((Func<State>) (() => {
+                    _cancellationToken.Cancel();
+                    CommandText = "Resume";
+                    Command = StartCommand;
+                    return State.Paused;
+                }))(),
+                (State.Running, Trigger.End) => ((Func<State>) (() => {
+                    Reset();
+                    return State.Idle;
+                }))(),
+                (State.Paused, Trigger.Cancel) => ((Func<State>) (() => {
+                    Reset();
+                    return State.Idle;
+                }))(),
+                (State.Paused, Trigger.Start) => ((Func<State>) (() => {
+                    CommandText = "Pause";
+                    Command = PauseCommand;
+                    DownloadExecute();
+                    return State.Running;
+                }))(),
+                _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
+            };
     }
-//
+
     public void
     Dispose() {
         _cancellationToken.Dispose();

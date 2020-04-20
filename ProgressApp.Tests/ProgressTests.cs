@@ -45,33 +45,33 @@ ProgressTest {
     [Test]
     public void 
     ProgressHandlerTest() {
-        var handler = new ProgressHandler();
+        var handler = new ProgressObserver();
         Assert.AreEqual(null, handler.Progress);
 
-        handler.Report(0, null);
+        handler.OnProgress(0, null);
         Assert.AreEqual(0, handler.Progress?.Value);
         Assert.AreEqual(null, handler.Progress?.TargetValue);
-        handler.Report(0, 100);
+        handler.OnProgress(0, 100);
         Assert.AreEqual(100, handler.Progress?.TargetValue);
 
         const string test = "test";
-        handler.Report(10, null, test);
+        handler.OnProgress(10, null, test);
         Assert.AreEqual(10, handler.Progress?.Value);
         Assert.AreEqual(null, handler.Progress?.TargetValue);
         Assert.AreEqual(test, handler.Progress?.Message);
 
         const string hello = "hello";
-        handler.Report(hello);
+        handler.OnProgress(hello);
         Assert.AreEqual(10, handler.Progress?.Value);
         Assert.AreEqual(null, handler.Progress?.TargetValue);
         Assert.AreEqual(hello, handler.Progress?.Message);
 
-        handler.Report(100);
+        handler.OnProgress(100);
         Assert.AreEqual(110, handler.Progress?.Value);
         Assert.AreEqual(null, handler.Progress?.TargetValue);
         Assert.AreEqual(hello, handler.Progress?.Message);
 
-        handler.Report(100, 200, test);
+        handler.OnProgress(100, 200, test);
         Assert.AreEqual(100, handler.Progress?.Value);
         Assert.AreEqual(200, handler.Progress?.TargetValue);
         Assert.AreEqual(test, handler.Progress?.Message);
