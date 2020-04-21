@@ -135,6 +135,15 @@ ProgressToIndeterminateConverter : IValueConverter {
 }
 
 public class
+ProgressToValueConverter : IValueConverter {
+    public object
+    Convert(object value, Type targetType, object parameter, CultureInfo culture) => ((Progress) value)?.Value ?? 0;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+    throw new NotImplementedException();
+}
+
+public class
 NullToVisibilityConverter : IValueConverter {
     public object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>

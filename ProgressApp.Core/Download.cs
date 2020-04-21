@@ -13,8 +13,8 @@ Download {
     private static readonly HttpClient HttpClient = new HttpClient();
 
     public static async Task<Result>
-    FileAsync(Uri requestUri, Stream stream, CancellationToken cancellationToken, IProgressObserver progress, long firstBytePosition = 0) {
-        var position = firstBytePosition.VerifyNonNegative();
+    FileAsync(Uri requestUri, Stream stream, CancellationToken cancellationToken, IProgressObserver progress, long initialBytePosition = 0) {
+        var position = initialBytePosition.VerifyNonNegative();
         if (!stream.CanWrite)
             throw new ArgumentException("stream doesn't support write operations");
 

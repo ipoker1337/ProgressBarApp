@@ -20,15 +20,8 @@ ProgressViewModel : ViewModel, IDisposable {
 
     private void OnProgressUpdate(object? sender, EventArgs e) {
         TargetValue = _provider.Progress?.TargetValue ?? 0;
-        Value = _provider.Progress?.Value ?? 0;
         Caption = _provider.Progress?.Message ?? string.Empty;
         Progress = _provider.Progress;
-    }
-
-    private long _value;
-    public long Value {
-        get => _value;
-        private set => SetPropertyIfChanged(ref _value, value);
     }
 
     private long _targetValue;

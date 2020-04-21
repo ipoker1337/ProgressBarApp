@@ -6,6 +6,7 @@
 
     <common:ProgressToTextConverter x:Key="ProgressToTextConverter" UpdateThresholdMs="500" />
     <common:ProgressToIndeterminateConverter x:Key="ProgressToIndeterminateConverter" />
+    <common:ProgressToValueConverter x:Key="ProgressToValueConverter" />
     <common:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
@@ -119,7 +120,7 @@
                 IsIndeterminate="{Binding Progress, Converter={StaticResource ProgressToIndeterminateConverter}}"
                 Maximum="{Binding TargetValue}"
                 Style="{StaticResource LinearProgressBarStyle}"
-                Value="{Binding Value, Mode=OneWay}" />
+                Value="{Binding Progress, Mode=OneWay, Converter={StaticResource ProgressToValueConverter}}" />
         </Grid>
     </DataTemplate>
 
