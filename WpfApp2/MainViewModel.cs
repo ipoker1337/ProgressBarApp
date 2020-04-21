@@ -41,8 +41,7 @@ MainViewModel : ViewModel, IDisposable {
     private const string _fileName = "test.zip";
     private readonly ProgressObserver _progressObserver = new ProgressObserver();
     private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
-    private Stream _fileStream = Stream.Null;
-    
+
     private long _lastBytePosition;
     private string? _error;
     private string _commandText = string.Empty;
@@ -72,19 +71,22 @@ MainViewModel : ViewModel, IDisposable {
     // under development
     private async void 
     DownloadExecute() {
-        _fileStream = (_fileStream == Stream.Null) ? File.Create(_fileName) : _fileStream;
-        var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), _fileStream, _cancellationToken.Token, 
-                                              _progressObserver, _lastBytePosition);
-
-        result.OnSuccess(() => Fire(Trigger.End))
-              .OnFailure(HandleException, x => x.Exception != null)
-              .OnFailure(Pause, _ => CurrentState == State.Paused)
-              .OnBoth(_ => { _cancellationToken = new CancellationTokenSource(); Command.Refresh(); });
-
-        void
-        HandleException(Result value) {
-            Error = value.Exception?.Message;
+        try {
+            // TODO: Исправить -  deltaValue передается после отмены операции и ProgressBar переходит в Indeterminate режим
+            await using var fileStream = File.Open(_fileName, FileMode.Append);
+            var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), fileStream, _cancellationToken.Token, _progressObserver, _lastBytePosition);
+            if (result.IsSuccess) 
+                Fire(Trigger.End);
+            if (CurrentState == State.Paused)
+                Pause(result);
+        }
+        catch (Exception ex) {
+            Error = ex is OperationCanceledException ? null : ex.Message;
             Fire(Trigger.Cancel);
+        }
+        finally {
+            _cancellationToken = new CancellationTokenSource();
+            Command.Refresh();
         }
 
         void
@@ -96,10 +98,7 @@ MainViewModel : ViewModel, IDisposable {
 
     private void
     Reset() {
-        _fileStream.Close();
-        _fileStream = Stream.Null;
         _progressObserver.Reset();
-        DownloadProgress.Progress = null;
         _lastBytePosition = 0;
         CommandText = "Start";
         Command = StartCommand;
@@ -117,6 +116,8 @@ MainViewModel : ViewModel, IDisposable {
                     Error = null;
                     CommandText = "Pause";
                     Command = PauseCommand;
+                    if (_lastBytePosition == 0)
+                        if (File.Exists(_fileName)) File.Delete(_fileName);
                     DownloadExecute();
                     return State.Running;
                 }))(),

@@ -33,13 +33,13 @@ ProgressViewModel : ViewModel, IDisposable {
     private Progress? _progress;
     public Progress? Progress {
         get => _progress;
-        set => SetPropertyIfChanged(ref _progress, value);
+        private set => SetPropertyIfChanged(ref _progress, value);
     }
 
     private string _caption = string.Empty;
     public string Caption {
         get => _caption;
-        set => SetPropertyIfChanged(ref _caption, value);
+        private set => SetPropertyIfChanged(ref _caption, value);
     }
 
     public void 

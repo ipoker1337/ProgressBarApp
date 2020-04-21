@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -122,10 +123,11 @@ ProgressToTextConverter : IValueConverter {
 public class 
 ProgressToIndeterminateConverter : IValueConverter {
     public object 
-    Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
+    Convert(object value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return false;
         var progress = (Progress) value;
+        Debug.WriteLine(progress);
         return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
 
