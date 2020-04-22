@@ -12,12 +12,10 @@ public class
 Result {
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
-    public Exception? Exception { get; }
     public long BytesReceived { get; }
 
-    protected Result(bool isSuccess, Exception? exception = null, long bytesReceived = 0) {
+    protected Result(bool isSuccess, long bytesReceived = 0) {
         IsSuccess = isSuccess;
-        Exception = exception;
         BytesReceived = bytesReceived;
     }
 
@@ -25,7 +23,7 @@ Result {
     Success() => new Result(true);
 
     public static Result
-    Failure(long bytesReceived, Exception? exception = null) => new Result(false, exception, bytesReceived);
+    Failure(long bytesReceived) => new Result(false, bytesReceived);
 }
 
 public static class
