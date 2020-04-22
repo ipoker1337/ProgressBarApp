@@ -72,16 +72,18 @@ MainViewModel : ViewModel, IDisposable {
     private async void 
     DownloadExecute() {
         try {
-            // TODO: Исправить -  deltaValue передается после отмены операции и ProgressBar переходит в Indeterminate режим
             await using var fileStream = File.Open(_fileName, FileMode.Append);
             var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), fileStream, _cancellationToken.Token, _progressObserver, _lastBytePosition);
             if (result.IsSuccess) 
                 Fire(Trigger.End);
             if (CurrentState == State.Paused)
                 Pause(result);
+            else {
+                Reset();
+            }
         }
         catch (Exception ex) {
-            Error = ex is OperationCanceledException ? null : ex.Message;
+            Error = ex.Message;
             Fire(Trigger.Cancel);
         }
         finally {
@@ -123,7 +125,6 @@ MainViewModel : ViewModel, IDisposable {
                 }))(),
                 (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
                     _cancellationToken.Cancel();
-                    Reset();
                     return State.Idle;
                 }))(),
                 (State.Running, Trigger.Pause) => ((Func<State>) (() => {

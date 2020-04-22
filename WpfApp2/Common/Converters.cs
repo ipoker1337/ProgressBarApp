@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -127,7 +126,6 @@ ProgressToIndeterminateConverter : IValueConverter {
         if (value is null)
             return false;
         var progress = (Progress) value;
-        Debug.WriteLine(progress);
         return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
 

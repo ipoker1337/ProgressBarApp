@@ -42,8 +42,11 @@ ProgressViewModel : ViewModel, IDisposable {
         private set => SetPropertyIfChanged(ref _caption, value);
     }
 
-    public void 
-    Dispose() => _timer.Tick -= OnProgressUpdate;
+    public void
+    Dispose() {
+        _timer.Tick -= OnProgressUpdate;
+        _timer.Stop();
+    }
     
 }
 }
