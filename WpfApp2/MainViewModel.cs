@@ -8,26 +8,25 @@ namespace WpfApp2 {
 
 public class 
 MainViewModel : ViewModel, IDisposable {
-    private const string _fileName = "test.zip";
-    private readonly ProgressObserver _progressObserver = new ProgressObserver();
-    private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+    private readonly Uri _sourceUri = new Uri(@"http://87.76.21.20/test.zip");
+    private readonly ProgressObserver _progressObserver;
+    private readonly string _fileName;
 
+    private CancellationTokenSource _cancellationToken;
     private long _lastBytePosition;
-    private string? _error;
 
     public MainViewModel() {
+        _fileName = Path.GetFileName(_sourceUri.LocalPath);
+        _progressObserver = new ProgressObserver();
+        _cancellationToken = new CancellationTokenSource();
         DownloadProgress = new ProgressViewModel(_progressObserver);
         CurrentState = State.Idle;
         Reset();
     }
 
-    public enum State { Idle, Running, Paused }
-    private enum Trigger { Start, Pause, Cancel, End }
-
-    public State CurrentState { get; private set; }
-
     public ProgressViewModel DownloadProgress { get; }
 
+    private string? _error;
     public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
 
     public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Idle);
@@ -35,12 +34,16 @@ MainViewModel : ViewModel, IDisposable {
     public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Paused);
     public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => CurrentState != State.Idle);
 
+    private enum State { Idle, Running, Paused }
+    private enum Trigger { Start, Pause, Cancel, End }
+    private State CurrentState { get; set; }
+
     // under development
     private async void 
     DownloadExecute() {
         try {
             await using var fileStream = File.Open(_fileName, FileMode.Append);
-            var result = await Download.FileAsync(new Uri(@"http://87.76.21.20/test.zip"), fileStream, _cancellationToken.Token, _progressObserver, _lastBytePosition);
+            var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _lastBytePosition);
             if (result.IsSuccess) 
                 Fire(Trigger.End);
             if (CurrentState == State.Paused)
@@ -55,11 +58,11 @@ MainViewModel : ViewModel, IDisposable {
         }
         finally {
             _cancellationToken = new CancellationTokenSource();
-            //Command.Refresh();
+            StartCommand.Refresh();
         }
 
         void
-        Pause(Result value) {
+        Pause(DownloadResult value) {
             _lastBytePosition = value.BytesReceived;
             _progressObserver.OnProgress("Paused");
         }
@@ -69,8 +72,6 @@ MainViewModel : ViewModel, IDisposable {
     Reset() {
         _progressObserver.Reset();
         _lastBytePosition = 0;
-
-        //Command.Refresh();
     }
 
     private void
@@ -116,33 +117,5 @@ MainViewModel : ViewModel, IDisposable {
         _cancellationToken.Dispose();
         DownloadProgress.Dispose();
     }
-}
-
-public class 
-DownloadContext {
-    public Uri RequestUri { get; }
-    public string FileName { get; }
-    public string Directory { get; }
-    public ILogger Logger { get; }
-    public ProgressObserver ProgressObserver { get; } = new ProgressObserver();
-    public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
-
-    public DownloadContext(Uri requestUri, string filename, string directory, ILogger? logger = null) =>
-        (RequestUri, FileName, Directory, Logger) = (requestUri, filename, directory, logger ?? DefaultLogger.Null);
-}
-
-public class
-DownloadViewModel {
-    public DownloadViewModel(DownloadContext ctx) {
-        DownloadProgress = new ProgressViewModel(ctx.ProgressObserver);
-        CurrentState = State.Idle;
-    }
-
-    public enum State { Idle, Running, Paused }
-    private enum Trigger { Start, Pause, Cancel, End }
-
-    public State CurrentState { get; private set; }
-
-    public ProgressViewModel DownloadProgress { get; }
 }
 }

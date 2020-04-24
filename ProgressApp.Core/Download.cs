@@ -9,28 +9,29 @@ using ProgressApp.Core.Common;
 namespace ProgressApp.Core {
 
 public class
-Result {
+DownloadResult {
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public long BytesReceived { get; }
 
-    protected Result(bool isSuccess, long bytesReceived = 0) {
+    protected DownloadResult(bool isSuccess, long bytesReceived = 0) {
         IsSuccess = isSuccess;
         BytesReceived = bytesReceived;
     }
 
-    public static Result
-    Success() => new Result(true);
+    public static DownloadResult
+    Success() => new DownloadResult(true);
 
-    public static Result
-    Failure(long bytesReceived) => new Result(false, bytesReceived);
+    public static DownloadResult
+    Failure(long bytesReceived) => new DownloadResult(false, bytesReceived);
 }
 
 public static class
 Download {
     private static readonly HttpClient HttpClient = new HttpClient();
+    private const int BufferSize = 4096;
 
-    public static async Task<Result>
+    public static async Task<DownloadResult>
     FileAsync(Uri requestUri, Stream stream, CancellationToken cancellationToken, IProgressObserver progress, long initialBytePosition = 0) {
         var position = initialBytePosition.VerifyNonNegative();
         if (!stream.CanWrite)
@@ -48,12 +49,12 @@ Download {
         progress.OnProgress(position, contentLength, "Downloading...");
 
         await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        var buffer = new byte[4096];
+        var buffer = new byte[BufferSize];
         var moreToRead = true;
 
         while (moreToRead) {
             if (cancellationToken.IsCancellationRequested)
-                return Result.Failure(position);
+                return DownloadResult.Failure(position);
             var deltaValue = await responseStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
             if (deltaValue == 0)
                 moreToRead = false;
@@ -64,7 +65,7 @@ Download {
             }
         }
 
-        return Result.Success();
+        return DownloadResult.Success();
     }
 
     private static async Task<long?> 
