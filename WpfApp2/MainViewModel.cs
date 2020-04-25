@@ -21,7 +21,7 @@ MainViewModel : ViewModel, IDisposable {
         _progressObserver = new ProgressObserver();
         _cancellationToken = new CancellationTokenSource();
         DownloadProgress = new ProgressViewModel(_progressObserver);
-        DownloadState = State.Idle;
+        CurrentState = State.Idle;
     }
 
     private enum State { Idle, Running, Paused }
@@ -30,12 +30,12 @@ MainViewModel : ViewModel, IDisposable {
     public ProgressViewModel DownloadProgress { get; }
     public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
 
-    public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => DownloadState == State.Idle);
-    public RelayCommand PauseCommand => new RelayCommand(() => Fire(Trigger.Pause), () =>  DownloadState == State.Running);
-    public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => DownloadState == State.Paused);
-    public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => DownloadState != State.Idle);
+    public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Idle);
+    public RelayCommand PauseCommand => new RelayCommand(() => Fire(Trigger.Pause), () =>  CurrentState == State.Running);
+    public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Paused);
+    public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => CurrentState != State.Idle);
 
-    private State DownloadState { get; set; }
+    private State CurrentState { get; set; }
 
     private async void 
     DownloadExecute() {
@@ -45,7 +45,7 @@ MainViewModel : ViewModel, IDisposable {
             if (result.IsSuccess) {
                 Fire(Trigger.End);
             }
-            if (DownloadState == State.Paused) {
+            if (CurrentState == State.Paused) {
                 _initialBytePosition = result.BytesReceived;
                 _progressObserver.OnProgress("Paused");
             }
@@ -71,7 +71,7 @@ MainViewModel : ViewModel, IDisposable {
 
     private void
     Fire(Trigger trigger) {
-        DownloadState = TransitionTo(DownloadState, trigger);
+        CurrentState = TransitionTo(CurrentState, trigger);
 
         State
         TransitionTo(State state, Trigger value) =>
@@ -103,7 +103,7 @@ MainViewModel : ViewModel, IDisposable {
                     DownloadExecute();
                     return State.Running;
                 }))(),
-                _ => throw new NotSupportedException($"{DownloadState} has no transition on {value}")
+                _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
             };
     }
 
