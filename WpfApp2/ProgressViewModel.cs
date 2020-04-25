@@ -47,6 +47,5 @@ ProgressViewModel : ViewModel, IDisposable {
         _timer.Tick -= OnProgressUpdate;
         _timer.Stop();
     }
-    
 }
 }

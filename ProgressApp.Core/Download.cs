@@ -10,17 +10,16 @@ namespace ProgressApp.Core {
 
 public class
 DownloadResult {
+    public static readonly DownloadResult Success = new DownloadResult(true);
+
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public long BytesReceived { get; }
 
-    protected DownloadResult(bool isSuccess, long bytesReceived = 0) {
+    private DownloadResult(bool isSuccess, long bytesReceived = 0) {
         IsSuccess = isSuccess;
         BytesReceived = bytesReceived;
     }
-
-    public static DownloadResult
-    Success() => new DownloadResult(true);
 
     public static DownloadResult
     Failure(long bytesReceived) => new DownloadResult(false, bytesReceived);
@@ -38,10 +37,11 @@ Download {
             throw new ArgumentException("stream doesn't support write operations");
 
         progress.OnProgress("Connecting...");
+
         var contentLength = await GetContentLengthAsync(requestUri, cancellationToken).ConfigureAwait(false);
-            
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         request.Headers.Range = new RangeHeaderValue(position, contentLength);
+
         var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"The request returned {response.StatusCode}");
@@ -65,7 +65,7 @@ Download {
             }
         }
 
-        return DownloadResult.Success();
+        return DownloadResult.Success;
     }
 
     private static async Task<long?> 
@@ -76,5 +76,4 @@ Download {
         return response.Content.Headers.ContentLength;
     }
 }
-
 }

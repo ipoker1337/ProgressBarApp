@@ -13,41 +13,42 @@ MainViewModel : ViewModel, IDisposable {
     private readonly string _fileName;
 
     private CancellationTokenSource _cancellationToken;
-    private long _lastBytePosition;
+    private long _initialBytePosition;
+    private string? _error;
 
     public MainViewModel() {
         _fileName = Path.GetFileName(_sourceUri.LocalPath);
         _progressObserver = new ProgressObserver();
         _cancellationToken = new CancellationTokenSource();
         DownloadProgress = new ProgressViewModel(_progressObserver);
-        CurrentState = State.Idle;
-        Reset();
+        DownloadState = State.Idle;
     }
-
-    public ProgressViewModel DownloadProgress { get; }
-
-    private string? _error;
-    public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
-
-    public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Idle);
-    public RelayCommand PauseCommand => new RelayCommand(() => Fire(Trigger.Pause), () =>  CurrentState == State.Running);
-    public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Paused);
-    public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => CurrentState != State.Idle);
 
     private enum State { Idle, Running, Paused }
     private enum Trigger { Start, Pause, Cancel, End }
-    private State CurrentState { get; set; }
 
-    // under development
+    public ProgressViewModel DownloadProgress { get; }
+    public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
+
+    public RelayCommand StartCommand => new RelayCommand(() => Fire(Trigger.Start), () => DownloadState == State.Idle);
+    public RelayCommand PauseCommand => new RelayCommand(() => Fire(Trigger.Pause), () =>  DownloadState == State.Running);
+    public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => DownloadState == State.Paused);
+    public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => DownloadState != State.Idle);
+
+    private State DownloadState { get; set; }
+
     private async void 
     DownloadExecute() {
         try {
             await using var fileStream = File.Open(_fileName, FileMode.Append);
-            var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _lastBytePosition);
-            if (result.IsSuccess) 
+            var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _initialBytePosition);
+            if (result.IsSuccess) {
                 Fire(Trigger.End);
-            if (CurrentState == State.Paused)
-                Pause(result);
+            }
+            if (DownloadState == State.Paused) {
+                _initialBytePosition = result.BytesReceived;
+                _progressObserver.OnProgress("Paused");
+            }
             else {
                 Reset();
             }
@@ -60,30 +61,24 @@ MainViewModel : ViewModel, IDisposable {
             _cancellationToken = new CancellationTokenSource();
             StartCommand.Refresh();
         }
-
-        void
-        Pause(DownloadResult value) {
-            _lastBytePosition = value.BytesReceived;
-            _progressObserver.OnProgress("Paused");
-        }
     }
 
     private void
     Reset() {
         _progressObserver.Reset();
-        _lastBytePosition = 0;
+        _initialBytePosition = 0;
     }
 
     private void
     Fire(Trigger trigger) {
-        CurrentState = TransitionTo(CurrentState, trigger);
+        DownloadState = TransitionTo(DownloadState, trigger);
 
         State
         TransitionTo(State state, Trigger value) =>
             (state, trigger: value) switch {
                 (State.Idle, Trigger.Start) => ((Func<State>) (() => {
                     Error = null;
-                    if (_lastBytePosition == 0)
+                    if (_initialBytePosition == 0)
                         if (File.Exists(_fileName)) File.Delete(_fileName);
                     DownloadExecute();
                     return State.Running;
@@ -108,7 +103,7 @@ MainViewModel : ViewModel, IDisposable {
                     DownloadExecute();
                     return State.Running;
                 }))(),
-                _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
+                _ => throw new NotSupportedException($"{DownloadState} has no transition on {value}")
             };
     }
 

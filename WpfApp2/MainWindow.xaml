@@ -30,37 +30,27 @@
                 Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
             <ContentControl HorizontalContentAlignment="Stretch" Content="{Binding DownloadProgress}" />
             <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                <StackPanel.Resources>
+                    <Style BasedOn="{StaticResource FlatButtonStyle}" TargetType="Button">
+                        <Setter Property="Width" Value="70" />
+                        <Setter Property="Height" Value="32" />
+                        <Setter Property="Margin" Value="0,0,5,0" />
+                        <Setter Property="Padding" Value="5,0,5,0" />
+                    </Style>
+                </StackPanel.Resources>
                 <Button
-                    Width="70"
-                    Height="32"
-                    Margin="0,0,5,0"
-                    Padding="5,0,5,0"
                     Command="{Binding StartCommand}"
                     Content="Start"
                     Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Button
-                    Width="70"
-                    Height="32"
-                    Margin="0,0,5,0"
-                    Padding="5,0,5,0"
                     Command="{Binding PauseCommand}"
                     Content="Pause"
                     Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Button
-                    Width="70"
-                    Height="32"
-                    Margin="0,0,5,0"
-                    Padding="5,0,5,0"
                     Command="{Binding ResumeCommand}"
                     Content="Resume"
                     Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <Button
-                    Width="70"
-                    Height="32"
-                    Margin="0,0,8,0"
-                    Padding="5,0,5,0"
-                    Command="{Binding CancelCommand}"
-                    Content="Cancel" />
+                <Button Command="{Binding CancelCommand}" Content="Cancel" />
             </StackPanel>
         </StackPanel>
     </Border>

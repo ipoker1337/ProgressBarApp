@@ -63,20 +63,10 @@ Progress {
     }
 
     public static Progress
-    Create() => new Progress(
-        value: 0,
-        targetValue: null,
-        rate: 0,
-        timeLeft: TimeSpan.Zero,
-        message: string.Empty);
+    Create() => new Progress(0, null, 0, TimeSpan.Zero, string.Empty);
 
     public static Progress
-    Create(long value, long? targetValue, string message) => new Progress(
-        value: value,
-        targetValue: targetValue,
-        rate: 0,
-        timeLeft: TimeSpan.Zero,
-        message: message);
+    Create(long value, long? targetValue, string message) => new Progress(value, targetValue, 0, TimeSpan.Zero, message);
 
     public Progress 
     Update(long value, long rate, TimeSpan timeLeft) => new Progress(value, TargetValue, rate, timeLeft, Message);
@@ -88,7 +78,7 @@ Progress {
     WithRate(long rate) => new Progress(Value, TargetValue, rate.VerifyNonNegative(), TimeLeft, Message);
 
     public override string 
-    ToString() => $"{Message}: {Rate} B/s - {Value} of {TargetValue}, {TimeLeft.ToReadable()} left";
+    ToString() => $"{Message}: {Rate}/s - {Value} of {TargetValue}, {TimeLeft.ToReadable()} left";
 }
 
 // ringbuffer, в конструкторе принимает интервал в секундах за который считается средняя скорость
