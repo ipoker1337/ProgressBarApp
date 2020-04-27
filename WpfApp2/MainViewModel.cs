@@ -62,12 +62,6 @@ MainViewModel : ViewModel, IDisposable {
     }
 
     private void
-    Reset() {
-        _progressObserver.Reset();
-        _initialBytePosition = 0;
-    }
-
-    private void
     Fire(Trigger trigger) {
         CurrentState = TransitionTo(CurrentState, trigger);
 
@@ -101,7 +95,13 @@ MainViewModel : ViewModel, IDisposable {
                     return State.Running;
                 }))(),
                 _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
-            };
+        };
+    }
+
+    private void
+    Reset() {
+        _progressObserver.Reset();
+        _initialBytePosition = 0;
     }
 
     public void
