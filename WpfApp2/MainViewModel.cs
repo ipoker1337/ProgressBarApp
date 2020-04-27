@@ -54,7 +54,7 @@ MainViewModel : ViewModel, IDisposable {
         }
         catch (Exception ex) {
             Error = ex.Message;
-            Reset();
+            CurrentState = State.Idle;
         }
         finally {
             if (CurrentState != State.Paused)
