@@ -10,8 +10,6 @@ namespace ProgressApp.Core {
 
 public class
 DownloadResult {
-    public static readonly DownloadResult Success = new DownloadResult(true);
-
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public long BytesReceived { get; }
@@ -21,7 +19,10 @@ DownloadResult {
         BytesReceived = bytesReceived;
     }
 
-    public static DownloadResult
+    public static readonly DownloadResult 
+    Success = new DownloadResult(true);
+
+    public static DownloadResult 
     Failure(long bytesReceived) => new DownloadResult(false, bytesReceived);
 }
 

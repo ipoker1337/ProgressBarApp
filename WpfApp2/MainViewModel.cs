@@ -42,15 +42,11 @@ MainViewModel : ViewModel, IDisposable {
         try {
             await using var fileStream = File.Open(_fileName, FileMode.Append);
             var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _initialBytePosition);
-            if (result.IsSuccess) {
+            if (result.IsSuccess) 
                 Fire(Trigger.End);
-            }
-            if (CurrentState == State.Paused) {
+            else if (CurrentState == State.Paused) {
                 _initialBytePosition = result.BytesReceived;
                 _progressObserver.OnProgress("Paused");
-            }
-            else {
-                Reset();
             }
         }
         catch (Exception ex) {
@@ -58,6 +54,8 @@ MainViewModel : ViewModel, IDisposable {
             Fire(Trigger.Cancel);
         }
         finally {
+            if (CurrentState != State.Paused)
+                Reset();
             _cancellationToken = new CancellationTokenSource();
             StartCommand.Refresh();
         }
@@ -92,7 +90,6 @@ MainViewModel : ViewModel, IDisposable {
                     return State.Paused;
                 }))(),
                 (State.Running, Trigger.End) => ((Func<State>) (() => {
-                    Reset();
                     return State.Idle;
                 }))(),
                 (State.Paused, Trigger.Cancel) => ((Func<State>) (() => {
