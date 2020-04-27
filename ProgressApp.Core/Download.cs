@@ -65,7 +65,6 @@ Download {
                 progress.OnProgress(deltaValue);
             }
         }
-
         return DownloadResult.Success;
     }
 

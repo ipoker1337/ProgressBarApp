@@ -1,10 +1,8 @@
 ﻿using System;
-
 namespace ProgressApp.Core.Common {
 
 public static class 
-INT {
-
+Int {
     public static int
     VerifyInRange(this int target, int start, int end) {
         if (target >= start && target <= end)
@@ -66,18 +64,19 @@ Long {
 
     public static TimeSpan 
     Seconds(this long seconds) => TimeSpan.FromSeconds(seconds);
+
+    public static Byte 
+    FromBytes(this long value) => new Byte((double)value);
 }
 
 public static class 
 Double {
-
     public static double
     VerifyNonNegative(this double value) {
         if (value < 0)
             throw new ArgumentOutOfRangeException($"Cannot be less than 0");
         return value;
     }
-
 }
 }
 

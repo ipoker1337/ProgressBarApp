@@ -4,80 +4,9 @@ using System.Windows;
 using System.Windows.Data;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
+using Byte = ProgressApp.Core.Common.Byte;
 
 namespace WpfApp2.Common {
-
-#region under development
-
-public struct 
-ByteConverter {
-    public const long BytesInKilobyte = 1024;
-    public const long BytesInMegabyte = 1048576;
-    public const long BytesInGigabyte = 1073741824;
-
-    public const string ByteSymbol = "B";
-    public const string KilobyteSymbol = "KB";
-    public const string MegabyteSymbol = "MB";
-    public const string GigabyteSymbol = "GB";
-
-    public enum Unit {
-        Bytes = 0,
-        Kilobytes = 1,
-        Megabytes = 2,
-        Gigabytes = 3,
-    }
-
-    public ByteConverter(double bytes) {
-        ToBytes = bytes.VerifyNonNegative();
-        ToKilobytes = bytes / BytesInKilobyte;
-        ToMegabytes = bytes / BytesInMegabyte;
-        ToGigabytes = bytes / BytesInGigabyte;
-    }
-
-    public static ByteConverter 
-    FromBytes(long value) => new ByteConverter(value);
-
-    public double ToBytes { get; }
-    public double ToKilobytes { get; }
-    public double ToMegabytes { get; }
-    public double ToGigabytes { get; }
-
-    public string ToReadable(Unit unit) {
-        switch (unit) {
-            case Unit.Gigabytes:
-                return $"{ToGigabytes:N1} {GigabyteSymbol}";
-            case Unit.Megabytes:
-                return $"{ToMegabytes:N1} {MegabyteSymbol}";
-            case Unit.Kilobytes:
-                return $"{ToKilobytes:N1} {KilobyteSymbol}";
-            default:
-                return $"{ToBytes:N1} {ByteSymbol}";
-        }
-    }
-
-    public string ToReadable() => ToReadable(LargestUnit);
-
-    public Unit LargestUnit {
-        get {
-            if (Math.Abs(ToGigabytes) >= 1) 
-                return Unit.Gigabytes;
-            if (Math.Abs(ToMegabytes) >= 1)
-                return Unit.Megabytes;
-            if (Math.Abs(ToKilobytes) >= 1)
-                return Unit.Kilobytes;
-            return Unit.Bytes;
-        }
-    }
-}
-
-public static class 
-Long {
-    public static ByteConverter 
-        FromBytes(this long value) => new ByteConverter((double)value);
-}
-
-#endregion
-
 
 public class 
 ProgressToTextConverter : IValueConverter {
@@ -108,7 +37,7 @@ ProgressToTextConverter : IValueConverter {
 
             var targetValue = progress.TargetValue?.FromBytes().ToReadable();
             var unit = progress.TargetValue?.FromBytes().LargestUnit;
-            var currentValue = progress.Value.FromBytes().ToReadable(unit ?? ByteConverter.Unit.Bytes);
+            var currentValue = progress.Value.FromBytes().ToReadable(unit ?? Byte.Unit.Megabytes);
             // 4.9 MB/s - 24.7 MB of 58.6 MB, 6 secs left
             return $"{rate}/s - {currentValue} of {targetValue}, {progress.TimeLeft.ToReadable()} left";
         }

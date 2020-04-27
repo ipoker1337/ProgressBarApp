@@ -3,7 +3,6 @@ namespace ProgressApp.Core.Common {
 
 public static class
 Time {
-
     private static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan OneHour = TimeSpan.FromHours(1);
     private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
@@ -11,14 +10,14 @@ Time {
     public static TimeSpan
     VerifyNonNegative(this TimeSpan value) {
         if (value < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException("TimeSpan cannot be negative");
+            throw new ArgumentOutOfRangeException(nameof(value), "TimeSpan cannot be negative");
         return value;
     }
 
     public static TimeSpan
     VerifyGreaterZero(this TimeSpan value) {
         if (value <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException("TimeSpan should be greater zero");
+            throw new ArgumentOutOfRangeException(nameof(value), "TimeSpan should be greater zero");
         return value;
     }
 
