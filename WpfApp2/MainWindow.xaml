@@ -27,6 +27,7 @@
                 FontWeight="Bold"
                 Foreground="Red"
                 Text="{Binding Error}"
+                TextWrapping="Wrap"
                 Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
             <ContentControl HorizontalContentAlignment="Stretch" Content="{Binding DownloadProgress}" />
             <StackPanel Margin="0,16,0,0" Orientation="Horizontal">

@@ -11,7 +11,6 @@ namespace ProgressApp.Core {
 public class
 DownloadResult {
     public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
     public long BytesReceived { get; }
 
     private DownloadResult(bool isSuccess, long bytesReceived = 0) {

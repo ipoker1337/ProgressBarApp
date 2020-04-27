@@ -2,24 +2,23 @@
 using System.IO;
 using System.Threading;
 using ProgressApp.Core;
+using ProgressApp.Core.Common;
 using WpfApp2.Common;
 
 namespace WpfApp2 {
 
 public class 
 MainViewModel : ViewModel, IDisposable {
-    private readonly Uri _sourceUri = new Uri(@"http://87.76.21.20/test.zip");
-    private readonly ProgressObserver _progressObserver;
     private readonly string _fileName;
+    private readonly Uri _sourceUri = new Uri(@"http://87.76.21.20/test.zip");
+    private readonly ProgressObserver _progressObserver = new ProgressObserver();
 
-    private CancellationTokenSource _cancellationToken;
-    private long _initialBytePosition;
     private string? _error;
+    private long _initialBytePosition;
+    private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
     public MainViewModel() {
         _fileName = Path.GetFileName(_sourceUri.LocalPath);
-        _progressObserver = new ProgressObserver();
-        _cancellationToken = new CancellationTokenSource();
         DownloadProgress = new ProgressViewModel(_progressObserver);
         CurrentState = State.Idle;
     }
@@ -27,6 +26,7 @@ MainViewModel : ViewModel, IDisposable {
     private enum State { Idle, Running, Paused }
     private enum Trigger { Start, Pause, Cancel, End }
 
+    private State CurrentState { get; set; }
     public ProgressViewModel DownloadProgress { get; }
     public string? Error { get => _error; private set => SetPropertyIfChanged(ref _error, value); }
 
@@ -35,11 +35,17 @@ MainViewModel : ViewModel, IDisposable {
     public RelayCommand ResumeCommand => new RelayCommand(() => Fire(Trigger.Start), () => CurrentState == State.Paused);
     public RelayCommand CancelCommand => new RelayCommand(() => Fire(Trigger.Cancel), () => CurrentState != State.Idle);
 
-    private State CurrentState { get; set; }
-
     private async void 
     DownloadExecute() {
         try {
+            Error = null;
+            if (_initialBytePosition == 0)
+                _fileName.DeleteFileIfExist();
+            else if (_initialBytePosition != _fileName.GetFileSizeOrZero()) {
+                _fileName.DeleteFileIfExist();
+                _initialBytePosition = 0;
+            }
+
             await using var fileStream = File.Open(_fileName, FileMode.Append);
             var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _initialBytePosition);
             if (result.IsSuccess) 
@@ -51,7 +57,7 @@ MainViewModel : ViewModel, IDisposable {
         }
         catch (Exception ex) {
             Error = ex.Message;
-            Fire(Trigger.Cancel);
+            Reset();
         }
         finally {
             if (CurrentState != State.Paused)
@@ -69,11 +75,12 @@ MainViewModel : ViewModel, IDisposable {
         TransitionTo(State state, Trigger value) =>
             (state, trigger: value) switch {
                 (State.Idle, Trigger.Start) => ((Func<State>) (() => {
-                    Error = null;
-                    if (_initialBytePosition == 0)
-                        if (File.Exists(_fileName)) File.Delete(_fileName);
                     DownloadExecute();
-                    return State.Running;
+                    return Error is null ? State.Running : State.Idle;
+                }))(),
+                (State.Idle, Trigger.Cancel) => ((Func<State>) (() => {
+                    Reset();
+                    return State.Idle;
                 }))(),
                 (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
                     _cancellationToken.Cancel();
@@ -92,7 +99,7 @@ MainViewModel : ViewModel, IDisposable {
                 }))(),
                 (State.Paused, Trigger.Start) => ((Func<State>) (() => {
                     DownloadExecute();
-                    return State.Running;
+                    return Error is null ? State.Running : State.Idle;
                 }))(),
                 _ => throw new NotSupportedException($"{CurrentState} has no transition on {value}")
         };
