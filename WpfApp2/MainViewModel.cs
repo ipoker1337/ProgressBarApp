@@ -39,14 +39,11 @@ MainViewModel : ViewModel, IDisposable {
     DownloadExecute() {
         try {
             Error = null;
-            if (_initialBytePosition == 0)
-                _fileName.DeleteFileIfExist();
-            else if (_initialBytePosition != _fileName.GetFileSizeOrZero()) {
+            if (_initialBytePosition == 0 || _initialBytePosition != _fileName.GetFileSizeOrZero()) {
                 _fileName.DeleteFileIfExist();
                 _initialBytePosition = 0;
             }
-
-            await using var fileStream = File.Open(_fileName, FileMode.Append);
+            await using var fileStream = _fileName.OpenFileForWrite(SeekOrigin.End);
             var result = await Download.FileAsync(_sourceUri, fileStream, _cancellationToken.Token, _progressObserver, _initialBytePosition);
             if (result.IsSuccess) 
                 Fire(Trigger.End);

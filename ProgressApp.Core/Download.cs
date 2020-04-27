@@ -31,12 +31,12 @@ Download {
     private const int BufferSize = 4096;
 
     public static async Task<DownloadResult>
-    FileAsync(Uri requestUri, Stream stream, CancellationToken cancellationToken, IProgressObserver progress, long initialBytePosition = 0) {
+    FileAsync(Uri requestUri, Stream stream, CancellationToken cancellationToken, IProgressObserver observer, long initialBytePosition = 0) {
         var position = initialBytePosition.VerifyNonNegative();
         if (!stream.CanWrite)
             throw new ArgumentException("stream doesn't support write operations");
 
-        progress.OnProgress("Connecting...");
+        observer.OnProgress("Connecting...");
 
         var contentLength = await GetContentLengthAsync(requestUri, cancellationToken).ConfigureAwait(false);
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -46,7 +46,7 @@ Download {
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"The request returned {response.StatusCode}");
 
-        progress.OnProgress(position, contentLength, "Downloading...");
+        observer.OnProgress(position, contentLength, "Downloading...");
 
         await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         var buffer = new byte[BufferSize];
@@ -61,7 +61,7 @@ Download {
             else {
                 await stream.WriteAsync(buffer, 0, deltaValue).ConfigureAwait(false);
                 position += deltaValue;
-                progress.OnProgress(deltaValue);
+                observer.OnProgress(deltaValue);
             }
         }
         return DownloadResult.Success;
