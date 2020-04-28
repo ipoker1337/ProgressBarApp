@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using ProgressApp.Core.Common;
-
 namespace ProgressApp.Core {
 
 public interface

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
-namespace ProgressApp.Core.Common {
+﻿using System.IO;
+namespace ProgressApp.Core {
 
 public static class 
 FileSytem {
-
     public static string
     DeleteFileIfExist(this string file) {
         if (File.Exists(file))

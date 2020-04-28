@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Data;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
-using Byte = ProgressApp.Core.Common.Byte;
 
 namespace WpfApp2.Common {
 
@@ -37,7 +36,7 @@ ProgressToTextConverter : IValueConverter {
 
             var targetValue = progress.TargetValue?.FromBytes().ToReadable();
             var unit = progress.TargetValue?.FromBytes().LargestUnit;
-            var currentValue = progress.Value.FromBytes().ToReadable(unit ?? Byte.Unit.Megabytes);
+            var currentValue = progress.Value.FromBytes().ToReadable(unit ?? ByteSize.Unit.Megabytes);
             // 4.9 MB/s - 24.7 MB of 58.6 MB, 6 secs left
             return $"{rate}/s - {currentValue} of {targetValue}, {progress.TimeLeft.ToReadable()} left";
         }

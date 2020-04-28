@@ -65,8 +65,8 @@ Long {
     public static TimeSpan 
     Seconds(this long seconds) => TimeSpan.FromSeconds(seconds);
 
-    public static Byte 
-    FromBytes(this long value) => new Byte((double)value);
+    public static ByteSize 
+    FromBytes(this long value) => ByteSize.FromBytes(value);
 }
 
 public static class 

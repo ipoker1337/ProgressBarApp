@@ -2,7 +2,7 @@
 namespace ProgressApp.Core.Common {
 
 public readonly struct 
-Byte {
+ByteSize {
     private const long BytesInKilobyte = 1024;
     private const long BytesInMegabyte = 1048576;
     private const long BytesInGigabyte = 1073741824;
@@ -19,10 +19,13 @@ Byte {
         Gigabytes = 3,
     }
 
-    public Byte(double bytes) => ToBytes = bytes.VerifyNonNegative();
+    public ByteSize(double bytes) => ToBytes = bytes.VerifyNonNegative();
 
-    public static Byte 
-    FromBytes(long value) => new Byte(value);
+    public static ByteSize 
+    FromBytes(long value) => new ByteSize(value);
+
+    public static ByteSize
+    FromMegaBytes(long value) => new ByteSize(value * BytesInMegabyte);
 
     public double ToBytes { get; }
     public double ToKilobytes => ToBytes / BytesInKilobyte;
