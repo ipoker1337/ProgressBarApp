@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-using WpfApp2.ViewModels;
+using ProgressApp.Wpf.ViewModels;
 
-namespace WpfApp2 {
+namespace ProgressApp.Wpf {
 
 public partial class 
 App : Application {

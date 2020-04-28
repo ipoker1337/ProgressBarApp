@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace WpfApp2 {
+namespace ProgressApp.Wpf {
 
 public class 
 ViewModel : INotifyPropertyChanged {

@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp2", "WpfApp2\WpfApp2.csproj", "{DE6DBC5A-4715-477D-B759-E0B6E13B8F07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProgressApp.Wpf", "ProgressApp.Wpf\ProgressApp.Wpf.csproj", "{DE6DBC5A-4715-477D-B759-E0B6E13B8F07}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProgressApp.Core", "ProgressApp.Core\ProgressApp.Core.csproj", "{27087DF2-CBAD-4391-B432-83E43415C64F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgressApp.Tests", "ProgressApp.Tests\ProgressApp.Tests.csproj", "{9CF24BB0-F934-47CF-B2AE-D82A095773DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProgressApp.Tests", "Tests\ProgressApp.Tests\ProgressApp.Tests.csproj", "{9CF24BB0-F934-47CF-B2AE-D82A095773DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CD50B82C-99C6-4D14-893A-F60433FBACEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9CF24BB0-F934-47CF-B2AE-D82A095773DF} = {CD50B82C-99C6-4D14-893A-F60433FBACEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {11645B6E-6F46-4F49-8AD1-5626E6A58AD4}

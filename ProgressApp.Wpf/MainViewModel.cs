@@ -2,10 +2,9 @@
 using System.IO;
 using System.Threading;
 using ProgressApp.Core;
-using ProgressApp.Core.Common;
-using WpfApp2.Common;
+using ProgressApp.Wpf.Common;
 
-namespace WpfApp2 {
+namespace ProgressApp.Wpf {
 
 public class 
 MainViewModel : ViewModel, IDisposable {

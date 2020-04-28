@@ -5,7 +5,7 @@ using System.Windows.Data;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
 
-namespace WpfApp2.Common {
+namespace ProgressApp.Wpf.Common {
 
 public class 
 ProgressToTextConverter : IValueConverter {
@@ -76,6 +76,17 @@ NullToVisibilityConverter : IValueConverter {
     public object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
         value == null ? Visibility.Collapsed : Visibility.Visible;
+
+    public object 
+    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
+public class
+InverseNullToVisibilityConverter : IValueConverter {
+    public object 
+    Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
+        value != null ? Visibility.Collapsed : Visibility.Visible;
 
     public object 
     ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>

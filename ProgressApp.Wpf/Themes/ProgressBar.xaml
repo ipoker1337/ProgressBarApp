@@ -1,13 +1,14 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:common="clr-namespace:WpfApp2.Common"
-    xmlns:wpfApp2="clr-namespace:WpfApp2">
+    xmlns:common="clr-namespace:ProgressApp.Wpf.Common"
+    xmlns:wpfApp2="clr-namespace:ProgressApp.Wpf">
 
     <common:ProgressToTextConverter x:Key="ProgressToTextConverter" UpdateThresholdMs="500" />
     <common:ProgressToIndeterminateConverter x:Key="ProgressToIndeterminateConverter" />
     <common:ProgressToValueConverter x:Key="ProgressToValueConverter" />
     <common:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    <common:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
     <!--  ProgressBar Style  -->

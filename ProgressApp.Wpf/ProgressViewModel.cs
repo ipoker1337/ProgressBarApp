@@ -3,7 +3,7 @@ using System.Windows.Threading;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
 
-namespace WpfApp2 {
+namespace ProgressApp.Wpf {
 
 public class 
 ProgressViewModel : ViewModel, IDisposable {

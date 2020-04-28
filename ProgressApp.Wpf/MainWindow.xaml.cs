@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WpfApp2.ViewModels
+namespace ProgressApp.Wpf.ViewModels
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
