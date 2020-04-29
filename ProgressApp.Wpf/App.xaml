@@ -8,7 +8,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ProgressApp.Wpf;component/Themes/ProgressBar.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/ProgressApp.Wpf;component/Themes/Button.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/ProgressApp.Wpf;component/Themes/ToogleButton.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/ProgressApp.Wpf;component/Themes/DefaultTheme.Light.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
