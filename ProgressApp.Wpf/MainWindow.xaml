@@ -2,12 +2,13 @@
     x:Class="ProgressApp.Wpf.ViewModels.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:ProgressApp.Wpf.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:wpfApp2="clr-namespace:ProgressApp.Wpf"
+    xmlns:wpf="clr-namespace:ProgressApp.Wpf"
     Width="600"
     Height="250"
-    d:DataContext="{d:DesignInstance wpfApp2:MainViewModel,
+    d:DataContext="{d:DesignInstance wpf:MainViewModel,
                                      IsDesignTimeCreatable=True}"
     Background="{DynamicResource WindowBackgroundBrush}"
     Foreground="{DynamicResource WindowForegroundBrush}"
@@ -28,7 +29,7 @@
                 Foreground="Red"
                 Text="Error"
                 TextWrapping="Wrap"
-                Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
+                Visibility="{Binding Error, Converter={c:NullToVisibilityConverter}}" />
             <ContentControl HorizontalContentAlignment="Stretch" Content="{Binding DownloadProgress}" />
             <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                 <StackPanel.Resources>
@@ -42,15 +43,15 @@
                 <Button
                     Command="{Binding StartCommand}"
                     Content="Start"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
                 <Button
                     Command="{Binding PauseCommand}"
                     Content="Pause"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
                 <Button
                     Command="{Binding ResumeCommand}"
                     Content="Resume"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
                 <Button Command="{Binding CancelCommand}" Content="Cancel" />
             </StackPanel>
         </StackPanel>

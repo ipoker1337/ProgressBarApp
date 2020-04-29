@@ -2,13 +2,26 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Markup;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
-
 namespace ProgressApp.Wpf.Common {
 
+public abstract class
+ConverterBase : MarkupExtension, IValueConverter {
+    public override object 
+    ProvideValue(IServiceProvider serviceProvider) => this;
+
+    public abstract object 
+    Convert(object value, Type targetType, object parameter, CultureInfo culture);
+
+    public object 
+    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
 public class 
-ProgressToTextConverter : IValueConverter {
+ProgressToTextConverter : ConverterBase {
     private DateTime _lastUpdate = DateTime.MinValue;
 
     private int _updateThresholdMs;
@@ -17,7 +30,7 @@ ProgressToTextConverter : IValueConverter {
         set => _updateThresholdMs = value.VerifyNonNegative();
     }
 
-    public object 
+    public override object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return string.Empty;
@@ -41,57 +54,54 @@ ProgressToTextConverter : IValueConverter {
             return $"{rate}/s - {currentValue} of {targetValue}, {progress.TimeLeft.ToReadable()} left";
         }
     }
-
-    public object 
-    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-        throw new NotImplementedException();
 }
 
 public class 
-ProgressToIndeterminateConverter : IValueConverter {
-    public object 
+ProgressToIndeterminateConverter : ConverterBase {
+    public override object 
     Convert(object value, Type targetType, object parameter, CultureInfo culture) {
         if (value is null)
             return false;
         var progress = (Progress) value;
         return !progress.TargetValue.HasValue || progress.TargetValue < progress.Value;
     }
-
-    public object 
-    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-        throw new NotImplementedException();
 }
 
 public class
-ProgressToValueConverter : IValueConverter {
-    public object
+ProgressToValueConverter : ConverterBase {
+    public override object
     Convert(object value, Type targetType, object parameter, CultureInfo culture) => ((Progress) value)?.Value ?? 0;
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-    throw new NotImplementedException();
 }
 
 public class
-NullToVisibilityConverter : IValueConverter {
-    public object 
+NullToVisibilityConverter : ConverterBase {
+    public override object 
     Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
         value == null ? Visibility.Collapsed : Visibility.Visible;
-
-    public object 
-    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-        throw new NotImplementedException();
 }
 
 public class
-InverseNullToVisibilityConverter : IValueConverter {
-    public object 
-    Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
+InverseNullToVisibilityConverter : ConverterBase {
+    public override object 
+    Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
         value != null ? Visibility.Collapsed : Visibility.Visible;
 
-    public object 
-    ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-        throw new NotImplementedException();
 }
+
+public class
+BooleanToVisibilityConverter : ConverterBase {
+    public override object 
+    Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        (bool)value ? Visibility.Visible : Visibility.Collapsed;
+}
+
+public class
+InverseBooleanToVisibilityConverter : ConverterBase {
+    public override object 
+    Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        (bool)value ? Visibility.Collapsed : Visibility.Visible;
+}
+
 
 }
 

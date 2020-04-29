@@ -20,9 +20,6 @@ FileSytem {
     GetFileSizeOrZero(this string file) => FileExists(file) ? GetFileSize(file) : 0;
 
     public static FileStream
-    OpenFileAppend(this string file) => File.Open(file, FileMode.Append);
-
-    public static FileStream
     OpenFileForWrite(this string file) => File.OpenWrite(file);
 
     public static FileStream
