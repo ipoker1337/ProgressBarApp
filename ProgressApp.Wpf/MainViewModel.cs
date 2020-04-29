@@ -74,10 +74,6 @@ MainViewModel : ViewModel, IDisposable {
                     DownloadExecute();
                     return Error is null ? State.Running : State.Idle;
                 }))(),
-                (State.Idle, Trigger.Cancel) => ((Func<State>) (() => {
-                    Reset();
-                    return State.Idle;
-                }))(),
                 (State.Running, Trigger.Cancel) => ((Func<State>) (() => {
                     _cancellationToken.Cancel();
                     return State.Idle;

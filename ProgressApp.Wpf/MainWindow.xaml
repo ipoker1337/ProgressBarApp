@@ -27,7 +27,7 @@
             <TextBlock
                 FontWeight="Bold"
                 Foreground="Red"
-                Text="Error"
+                Text="{Binding Error}"
                 TextWrapping="Wrap"
                 Visibility="{Binding Error, Converter={c:NullToVisibilityConverter}}" />
             <ContentControl HorizontalContentAlignment="Stretch" Content="{Binding DownloadProgress}" />
