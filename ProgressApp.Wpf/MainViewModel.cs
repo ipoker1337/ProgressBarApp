@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using ProgressApp.Core;
 using ProgressApp.Wpf.Common;
-
 namespace ProgressApp.Wpf {
 
 public class 

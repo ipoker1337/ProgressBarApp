@@ -1,7 +1,4 @@
 ﻿using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace ProgressApp.Core {
 
 public static class 

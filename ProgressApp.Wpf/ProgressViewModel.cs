@@ -2,7 +2,6 @@
 using System.Windows.Threading;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
-
 namespace ProgressApp.Wpf {
 
 public class 

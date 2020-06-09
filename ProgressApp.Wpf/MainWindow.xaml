@@ -38,21 +38,13 @@
                         <Setter Property="Height" Value="32" />
                         <Setter Property="Margin" Value="0,0,5,0" />
                         <Setter Property="Padding" Value="5,0,5,0" />
+                        <Setter Property="Visibility" Value="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
                     </Style>
                 </StackPanel.Resources>
-                <Button
-                    Command="{Binding StartCommand}"
-                    Content="Start"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
-                <Button
-                    Command="{Binding PauseCommand}"
-                    Content="Pause"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
-                <Button
-                    Command="{Binding ResumeCommand}"
-                    Content="Resume"
-                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=IsEnabled, Converter={c:BooleanToVisibilityConverter}}" />
-                <Button Command="{Binding CancelCommand}" Content="Cancel" />
+                <Button Command="{Binding StartCommand}" Content="Start" />
+                <Button Command="{Binding PauseCommand}" Content="Pause" />
+                <Button Command="{Binding ResumeCommand}" Content="Resume" />
+                <Button Command="{Binding CancelCommand}" Content="Cancel" Visibility="Visible" />
             </StackPanel>
         </StackPanel>
     </Border>
