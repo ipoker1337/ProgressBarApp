@@ -1,6 +1,6 @@
 ﻿using System;
-namespace ProgressApp.Core.Common {
 
+namespace ProgressApp.Core.Common {
 public readonly struct 
 ByteSize {
     private const long BytesInKilobyte = 1024;

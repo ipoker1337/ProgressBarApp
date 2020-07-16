@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-namespace ProgressApp.Wpf {
 
+namespace ProgressApp.Wpf {
 public class 
 ViewModel : INotifyPropertyChanged {
     public event PropertyChangedEventHandler? PropertyChanged;

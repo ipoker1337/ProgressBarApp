@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using ProgressApp.Core.Common;
-namespace ProgressApp.Core {
 
+namespace ProgressApp.Core {
 public interface
 IHasProgress {
     Progress? Progress { get; }
@@ -18,27 +17,34 @@ IProgressObserver {
 public class
 ProgressObserver : IProgressObserver, IHasProgress {
     private readonly RateEstimator _rateEstimator = new RateEstimator();
-
     public Progress? Progress { get; private set; }
 
     public void
     OnProgress(long value, long? targetValue, string message = "") =>
-        Progress = Progress.Create(value, targetValue, message);
+        Progress = new Progress(value, targetValue, 0, TimeSpan.Zero, message);
 
     public void
     OnProgress(string message) => 
-        Progress = Progress?.WithMessage(message) ?? Progress.Create().WithMessage(message);
+        Progress = Progress?.ReplaceMessage(message) ?? Progress.Empty.ReplaceMessage(message);
 
     public void
     OnProgress(long deltaValue) {
         deltaValue.VerifyNonNegative();
-        var p = Progress ?? Progress.Create();
+        Progress ??= Progress.Empty;
+
         var rate = _rateEstimator.GetCurrentRate(deltaValue);
-        var newValue = p.Value + deltaValue;
+        var newValue = Progress.Value + deltaValue;
+
         long timeLeft = 0;
-        if (p.TargetValue != null && p.TargetValue.Value > newValue && rate > 0)
-            timeLeft = (p.TargetValue.Value - newValue) / rate;
-        Progress = p.Update(newValue, rate, timeLeft.Seconds());
+        if (Progress.TargetValue != null && Progress.TargetValue.Value > newValue && rate > 0)
+            timeLeft = (Progress.TargetValue.Value - newValue) / rate;
+
+        Progress = new Progress(
+            value: newValue,
+            targetValue: Progress.TargetValue,
+            rate: rate,
+            timeLeft: timeLeft.Seconds(),
+            Progress.Message);
     }
 
     public void 
@@ -53,7 +59,7 @@ Progress {
     public TimeSpan TimeLeft { get; }
     public string Message { get; }
 
-    private Progress(long value, long? targetValue, long rate, TimeSpan timeLeft, string message) {
+    public Progress(long value, long? targetValue, long rate, TimeSpan timeLeft, string message) {
         Value = value.VerifyNonNegative();
         TargetValue = targetValue?.VerifyNonNegative();
         Rate = rate.VerifyNonNegative();
@@ -61,23 +67,24 @@ Progress {
         Message = message;
     }
 
-    public static Progress
-    Create() => new Progress(0, null, 0, TimeSpan.Zero, string.Empty);
-
-    public static Progress
-    Create(long value, long? targetValue, string message) => new Progress(value, targetValue, 0, TimeSpan.Zero, message);
-
-    public Progress 
-    Update(long value, long rate, TimeSpan timeLeft) => new Progress(value, TargetValue, rate, timeLeft, Message);
-
-    public Progress 
-    WithMessage(string message) => new Progress(Value, TargetValue, Rate, TimeLeft, message);
-
-    public Progress 
-    WithRate(long rate) => new Progress(Value, TargetValue, rate.VerifyNonNegative(), TimeLeft, Message);
+    public static readonly Progress 
+    Empty = new Progress(0, null, 0, TimeSpan.Zero, string.Empty);
 
     public override string 
     ToString() => $"{Message}: {Rate}/s - {Value} of {TargetValue}, {TimeLeft.ToReadable()} left";
+}
+
+public static class
+ProgressHelper {
+
+    public static Progress
+    ReplaceMessage(this Progress progress, string message) =>
+        new Progress(
+            value: progress.Value,
+            targetValue: progress.TargetValue,
+            rate: progress.Rate,
+            timeLeft: progress.TimeLeft,
+            message: message);
 }
 
 // ringbuffer, в конструкторе принимает интервал в секундах за который считается средняя скорость
@@ -86,32 +93,31 @@ RateEstimator {
     private readonly long[] _rateArray;
     private int _oldestIndex;
     private int _intervalCount;
-    //TODO: TimeStamp должен быть в виде DateTime
-    private long _oldestTime;
+    private DateTime _oldestTime;
 
     public RateEstimator(int timeIntervalSeconds = 10) 
-        : this(timeIntervalSeconds, Stopwatch.GetTimestamp()) { }
+        : this(timeIntervalSeconds, DateTime.UtcNow) { }
 
-    public RateEstimator(int timeIntervalSeconds, long timeStamp) {
+    public RateEstimator(int timeIntervalSeconds, DateTime timeStamp) {
         timeIntervalSeconds.VerifyNonNegative();
         _rateArray = new long[timeIntervalSeconds];
         Reset(timeStamp);
     }
 
     public long 
-    GetCurrentRate(long deltaValue = 0) => GetCurrentRate(deltaValue, Stopwatch.GetTimestamp());
+    GetCurrentRate(long deltaValue = 0) => GetCurrentRate(deltaValue, DateTime.UtcNow);
 
     public long 
-    GetCurrentRate(long deltaValue, long timeStamp) {
+    GetCurrentRate(long deltaValue, DateTime timeStamp) {
         ClearOldData(timeStamp);
         Increment(deltaValue, timeStamp);
         return CalculateRate();
     
         void
-        Increment(long deltaValue, long timeStamp) {
-            var secondsSinceOldest = new TimeSpan(timeStamp - _oldestTime).Seconds;
+        Increment(long value, DateTime now) {
+            var secondsSinceOldest = (now - _oldestTime).Seconds;
             var currentIndex = (_oldestIndex + secondsSinceOldest) % _rateArray.Length;
-            _rateArray[currentIndex] += deltaValue;
+            _rateArray[currentIndex] += value;
         }
 
         long
@@ -126,7 +132,7 @@ RateEstimator {
     }
 
     private void 
-    Reset(long timestamp) {
+    Reset(DateTime timestamp) {
         for (var i=0; i < _rateArray.Length; i++) {
             _rateArray[i] = 0;
         }
@@ -136,8 +142,8 @@ RateEstimator {
     }
 
     private void 
-    ClearOldData(long timestamp) {
-        var secondsSinceOldest = new TimeSpan(timestamp - _oldestTime).Seconds;
+    ClearOldData(DateTime timestamp) {
+        var secondsSinceOldest = (timestamp - _oldestTime).Seconds;
         if (secondsSinceOldest < 0) {
             Reset(timestamp);
             return;
@@ -158,10 +164,8 @@ RateEstimator {
         for (var i = 0; i < extraIntervals; i++) {
             _rateArray[_oldestIndex] = 0;
             _oldestIndex = (_oldestIndex + 1) % _rateArray.Length;
-            _oldestTime += TicksFromSeconds(1);
+            _oldestTime += TimeSpan.FromSeconds(1);
         }
-
-        long TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds).Ticks;
     }
 }
 }

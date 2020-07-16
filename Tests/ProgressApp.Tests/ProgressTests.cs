@@ -11,7 +11,7 @@ ProgressTest {
     [Test]
     public void 
     RateEstimatorTest() {
-        var now = Stopwatch.GetTimestamp();
+        var now = DateTime.UtcNow;
 
         var rateEstimator = new RateEstimator(10, now);
         Assert.AreEqual(0, rateEstimator.GetCurrentRate(0, now));
@@ -39,7 +39,7 @@ ProgressTest {
         Assert.AreEqual(0, rateEstimator.GetCurrentRate(0, now));
         Assert.AreEqual(100, rateEstimator.GetCurrentRate(100, now));
 
-        long TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds).Ticks;
+        TimeSpan TicksFromSeconds(double seconds) => TimeSpan.FromSeconds(seconds);
     }
 
     [Test]

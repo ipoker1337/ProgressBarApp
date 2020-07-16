@@ -2,8 +2,8 @@
 using System.Windows.Threading;
 using ProgressApp.Core;
 using ProgressApp.Core.Common;
-namespace ProgressApp.Wpf {
 
+namespace ProgressApp.Wpf {
 public class 
 ProgressViewModel : ViewModel, IDisposable {
     private readonly IHasProgress _provider;

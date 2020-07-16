@@ -1,6 +1,6 @@
 ﻿using System;
-namespace ProgressApp.Core.Common {
 
+namespace ProgressApp.Core.Common {
 public static class
 Time {
     private static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);

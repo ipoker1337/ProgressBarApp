@@ -5,8 +5,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
 using ProgressApp.Core.Common;
-namespace ProgressApp.Core {
 
+namespace ProgressApp.Core {
 public class
 DownloadResult {
     public bool IsSuccess { get; }

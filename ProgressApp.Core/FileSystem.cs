@@ -1,6 +1,6 @@
 ﻿using System.IO;
-namespace ProgressApp.Core {
 
+namespace ProgressApp.Core {
 public static class 
 FileSytem {
     public static string
@@ -14,10 +14,7 @@ FileSytem {
     FileExists(this string file) => File.Exists(file);
 
     public static long
-    GetFileSize(this string file) => new FileInfo(file).Length;
-
-    public static long
-    GetFileSizeOrZero(this string file) => FileExists(file) ? GetFileSize(file) : 0;
+    GetFileSize(this string file) => FileExists(file) ? new FileInfo(file).Length : 0;
 
     public static FileStream
     OpenFileForWrite(this string file) => File.OpenWrite(file);

@@ -8,7 +8,6 @@ using ProgressApp.Core.Common;
 using static ProgressApp.Core.Common.ByteSize;
 
 namespace ProgressApp.Wpf.Common {
-
 public abstract class
 ConverterBase : MarkupExtension, IValueConverter {
     public override object 

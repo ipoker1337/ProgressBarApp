@@ -3,8 +3,8 @@ using System.IO;
 using System.Threading;
 using ProgressApp.Core;
 using ProgressApp.Wpf.Common;
-namespace ProgressApp.Wpf {
 
+namespace ProgressApp.Wpf {
 public class 
 MainViewModel : ViewModel, IDisposable {
     private readonly string _fileName;
@@ -37,7 +37,7 @@ MainViewModel : ViewModel, IDisposable {
     DownloadExecute() {
         try {
             Error = null;
-            if (_initialBytePosition == 0 || _initialBytePosition != _fileName.GetFileSizeOrZero()) {
+            if (_initialBytePosition == 0 || _initialBytePosition != _fileName.GetFileSize()) {
                 _fileName.DeleteFileIfExist();
                 _initialBytePosition = 0;
             }

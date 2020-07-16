@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
-namespace ProgressApp.Wpf.Common {
 
+namespace ProgressApp.Wpf.Common {
 public class 
 RelayCommand<T> : ICommand {
     private readonly Action<T> _execute;
